@@ -20,7 +20,7 @@ export const MapGraphScreen = ({
   navigation,
 }: RootStackScreenProps<"MapGraph">) => {
   const { mapId, graphData } = route.params;
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const { width: windowWidth, height: windowHeight } = Dimensions.get("window");
 
   // graphData 유효성 검사
@@ -78,14 +78,8 @@ export const MapGraphScreen = ({
     ],
   }));
 
-  const handleNodePress = async (node: Node) => {
-    try {
-      const response = await nodeService.getNodeDetail(node.id);
-      setSelectedNode(response.data);
-    } catch (err) {
-      console.error("Error fetching node detail:", err);
-      // 에러 처리
-    }
+  const handleNodePress = (node: Node) => {
+    setSelectedNodeId(node.id);
   };
 
   const moveToNode = (nodeId: number) => {
@@ -143,9 +137,9 @@ export const MapGraphScreen = ({
       </GestureDetector>
 
       <NodeDetailModal
-        visible={selectedNode !== null}
-        onClose={() => setSelectedNode(null)}
-        node={selectedNode}
+        visible={selectedNodeId !== null}
+        onClose={() => setSelectedNodeId(null)}
+        nodeId={selectedNodeId}
         onMoveToNode={moveToNode}
       />
     </SafeAreaView>

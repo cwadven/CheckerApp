@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { NodeDetail } from "../../types/node";
 import LockedNodeModal from "./LockedNodeModal";
 import NodeContentModal from "./NodeContentModal";
@@ -7,28 +7,46 @@ import { nodeService } from "api/services/nodeService";
 interface NodeDetailModalProps {
   visible: boolean;
   onClose: () => void;
-  node: NodeDetail | null;
+  nodeId: number | null;
   onMoveToNode?: (nodeId: number) => void;
 }
 
 export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
   visible,
   onClose,
-  node: initialNode,
+  nodeId,
   onMoveToNode,
 }) => {
-  const [node, setNode] = useState<NodeDetail | null>(initialNode);
+  const [node, setNode] = useState<NodeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
-    setNode(initialNode);
-  }, [initialNode]);
+  useEffect(() => {
+    const fetchNodeDetail = async () => {
+      if (!nodeId) return;
 
-  const handleMoveToNode = async (nodeId: number) => {
+      try {
+        setIsLoading(true);
+        const response = await nodeService.getNodeDetail(nodeId);
+        setNode(response.data);
+      } catch (error) {
+        console.error("Failed to fetch node detail:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (visible && nodeId) {
+      fetchNodeDetail();
+    } else {
+      setNode(null);
+    }
+  }, [nodeId, visible]);
+
+  const handleMoveToNode = async (targetNodeId: number) => {
     try {
-      onMoveToNode?.(nodeId);
       setIsLoading(true);
-      const response = await nodeService.getNodeDetail(nodeId);
+      onMoveToNode?.(targetNodeId);
+      const response = await nodeService.getNodeDetail(targetNodeId);
       setNode(response.data);
     } catch (error) {
       console.error("Failed to fetch node detail:", error);
