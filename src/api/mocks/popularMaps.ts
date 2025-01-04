@@ -1,0 +1,81 @@
+import type { Map } from "../../types/map";
+
+export const mockPopularMaps: Map[] = [
+  {
+    id: 1,
+    name: "React 완벽 마스터",
+    description: "React의 기초부터 고급 개념까지 마스터하는 로드맵",
+    icon: "https://example.com/images/react-master.jpg",
+    background_image: "https://example.com/images/react-master-bg.jpg",
+    subscriber_count: 1234,
+    view_count: 5678,
+    is_subscribed: true,
+    created_by: {
+      id: 1,
+      name: "React 전문가",
+    },
+    created_at: "2024-01-01T00:00:00Z",
+    progress: {
+      completed_node_count: 4,
+      total_node_count: 10,
+      percentage: 40,
+      recent_activated_nodes: [{ id: 1, name: "HTML 마스터" }],
+    },
+  },
+  {
+    id: 2,
+    name: "TypeScript 실전 프로젝트",
+    description: "TypeScript로 실제 프로젝트 만들기",
+    icon: "https://example.com/images/typescript-project.jpg",
+    subscriber_count: 890,
+    view_count: 3456,
+    is_subscribed: true,
+    created_by: {
+      id: 2,
+      name: "TS 마스터",
+    },
+    created_at: "2024-01-02T00:00:00Z",
+  },
+  {
+    id: 3,
+    name: "Next.js로 풀스택 개발",
+    description: "Next.js를 활용한 현대적인 웹 개발",
+    icon: "https://example.com/images/nextjs-fullstack.jpg",
+    subscriber_count: 756,
+    view_count: 2890,
+    is_subscribed: false,
+    created_by: {
+      id: 3,
+      name: "풀스택 개발자",
+    },
+    created_at: "2024-01-03T00:00:00Z",
+  },
+  {
+    id: 4,
+    name: "Node.js 백엔드 완성",
+    description: "확장 가능한 백엔드 시스템 구축하기",
+    icon: "https://example.com/images/nodejs-backend.jpg",
+    subscriber_count: 678,
+    view_count: 2345,
+    is_subscribed: false,
+    created_by: {
+      id: 4,
+      name: "백엔드 전문가",
+    },
+    created_at: "2024-01-04T00:00:00Z",
+  },
+  {
+    id: 5,
+    name: "TDD 마스터 과정",
+    description: "테스트 주도 개발 실전 적용하기",
+    icon: "https://example.com/images/tdd-master.jpg",
+    subscriber_count: 543,
+    view_count: 1987,
+    is_subscribed: false,
+    created_by: {
+      id: 5,
+      name: "TDD 전문가",
+    },
+    created_at: "2024-01-05T00:00:00Z",
+  },
+];
