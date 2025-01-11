@@ -10,7 +10,7 @@ interface RuleItemProps {
   animatedHeight: Animated.Value;
   onToggle: () => void;
   variant: "completed" | "in_progress";
-  expandedTargetId: number | null;
+  expandedTargetIds: number[];
   animatedHeights: { [key: string]: Animated.Value };
   onToggleTarget: (targetId: number) => void;
   onViewAnswer: (questionId: number) => void;
@@ -27,7 +27,7 @@ export const RuleItem: React.FC<RuleItemProps> = ({
   animatedHeight,
   onToggle,
   variant,
-  expandedTargetId,
+  expandedTargetIds,
   animatedHeights,
   onToggleTarget,
   onViewAnswer,
@@ -83,7 +83,7 @@ export const RuleItem: React.FC<RuleItemProps> = ({
             <QuestionItem
               key={question.id}
               question={question}
-              isExpanded={expandedTargetId === question.arrow_id}
+              isExpanded={expandedTargetIds.includes(question.arrow_id)}
               animatedHeight={animatedHeights[`target-${question.arrow_id}`]}
               onToggle={() => onToggleTarget(question.arrow_id)}
               onViewAnswer={() => onViewAnswer(question.id)}

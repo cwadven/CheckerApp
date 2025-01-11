@@ -92,14 +92,14 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   isLoading = false,
 }) => {
   const [expandedRuleId, setExpandedRuleId] = useState<number | null>(null);
-  const [expandedTargetId, setExpandedTargetId] = useState<number | null>(null);
+  const [expandedTargetIds, setExpandedTargetIds] = useState<number[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
   const animatedHeights = useRef<{ [key: string]: Animated.Value }>({}).current;
   const [viewingAnswerId, setViewingAnswerId] = useState<number | null>(null);
 
   // 초기화 로직
   React.useEffect(() => {
-    setExpandedTargetId(null);
+    setExpandedTargetIds([]);
     setExpandedRuleId(null);
 
     Object.keys(animatedHeights).forEach((key) => {
@@ -144,23 +144,12 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
     setExpandedRuleId(isExpanding ? ruleId : null);
   };
 
-  const toggleTarget = (targetId: number) => {
-    const isExpanding = expandedTargetId !== targetId;
-
+  const handleToggleTarget = (targetId: number) => {
     if (!animatedHeights[`target-${targetId}`]) {
       animatedHeights[`target-${targetId}`] = new Animated.Value(0);
     }
 
-    if (expandedTargetId && expandedTargetId !== targetId) {
-      if (!animatedHeights[`target-${expandedTargetId}`]) {
-        animatedHeights[`target-${expandedTargetId}`] = new Animated.Value(0);
-      }
-      Animated.timing(animatedHeights[`target-${expandedTargetId}`], {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-    }
+    const isExpanding = !expandedTargetIds.includes(targetId);
 
     Animated.timing(animatedHeights[`target-${targetId}`], {
       toValue: isExpanding ? 1 : 0,
@@ -168,14 +157,18 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
       useNativeDriver: false,
     }).start();
 
-    setExpandedTargetId(isExpanding ? targetId : null);
+    setExpandedTargetIds(prev => 
+      prev.includes(targetId) 
+        ? prev.filter(id => id !== targetId)
+        : [...prev, targetId]
+    );
   };
 
   const handleMoveToNode = (nodeId: number) => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
 
     // 모달 상태 초기화
-    setExpandedTargetId(null);
+    setExpandedTargetIds([]);
     setExpandedRuleId(null);
     setViewingAnswerId(null);
 
@@ -316,9 +309,9 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
                       animatedHeight={animatedHeights[`rule-${rule.id}`]}
                       onToggle={() => toggleRule(rule.id)}
                       variant={variant}
-                      expandedTargetId={expandedTargetId}
+                      expandedTargetIds={expandedTargetIds}
                       animatedHeights={animatedHeights}
-                      onToggleTarget={toggleTarget}
+                      onToggleTarget={handleToggleTarget}
                       onViewAnswer={handleViewAnswer}
                       onMoveToNode={handleMoveToNode}
                       nodeId={node.id}
