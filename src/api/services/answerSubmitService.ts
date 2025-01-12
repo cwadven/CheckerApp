@@ -1,18 +1,14 @@
 import { apiClient } from "../client";
 import type { DocumentPickerAsset } from 'expo-document-picker';
 import { Platform } from 'react-native';
-
-interface AnswerSubmitResponse {
-  status: string;
-  message: string;
-}
+import type { AnswerSubmitResponse } from '../../types/answer';
 
 export const answerSubmitService = {
   submitAnswer: async (
     questionId: number,
     answer: string | null,
     files: DocumentPickerAsset[] | null
-  ) => {
+  ): Promise<AnswerSubmitResponse> => {
     const formData = new FormData();
     
     if (answer !== null) {

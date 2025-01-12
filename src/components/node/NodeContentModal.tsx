@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import RuleItem from "./RuleItem";
 import AnswerModal from "./AnswerModal";
 import AnswerSubmitModal from "./AnswerSubmitModal";
 import { nodeService } from "../../api/services/nodeService";
+import type { AnswerSubmitResponse } from '../../types/answer';
 
 interface NodeContentModalProps {
   isVisible: boolean;
@@ -28,6 +29,7 @@ interface NodeContentModalProps {
   onMoveToNode?: (nodeId: number) => void;
   variant: "completed" | "in_progress";
   isLoading?: boolean;
+  onRefreshNode: (nodeId: number) => Promise<void>;
 }
 
 interface VariantStyles {
@@ -85,21 +87,6 @@ const VARIANT_STYLES: Record<"completed" | "in_progress", VariantStyles> = {
   },
 };
 
-// AnswerSubmitResponse 타입 추가
-interface AnswerSubmitResponse {
-  status_code: string;
-  data: {
-    member_answer_id: number;
-    answer: string;
-    submitted_at: string;
-    validation_type: string;
-    status: string;
-    feedback: string;
-    going_to_in_progress_node_ids: number[];
-    completed_node_ids: number[];
-  };
-}
-
 export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   isVisible,
   onClose,
@@ -107,6 +94,7 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   onMoveToNode,
   variant,
   isLoading = false,
+  onRefreshNode,
 }) => {
   const [expandedRuleId, setExpandedRuleId] = useState<number | null>(null);
   const [expandedTargetIds, setExpandedTargetIds] = useState<number[]>([]);
@@ -237,23 +225,32 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
 
   const handleSubmitAnswer = async (response: AnswerSubmitResponse) => {
     try {
+      // 현재 확장된 상태 저장
+      const currentExpandedRuleId = expandedRuleId;
+      const currentExpandedTargetIds = [...expandedTargetIds];
+
       // 노드 정보 갱신
-      const updatedNodeDetail = await nodeService.getNodeDetail(node.id);
-      // 상태 업데이트
-      onMoveToNode?.(node.id);
+      await onRefreshNode(node.id);
       
-      // 필요한 경우 다른 상태 업데이트
-      if (response.data.going_to_in_progress_node_ids.length > 0) {
-        // 새로 활성화된 노드가 있는 경우 처리
-        console.log('New in-progress nodes:', response.data.going_to_in_progress_node_ids);
-      }
-      
-      if (response.data.completed_node_ids.length > 0) {
-        // 완료된 노드가 있는 경우 처리
-        console.log('Completed nodes:', response.data.completed_node_ids);
-      }
+      // 확장 상태 유지
+      setExpandedRuleId(currentExpandedRuleId);
+      setExpandedTargetIds(currentExpandedTargetIds);
+
+      // 애니메이션 값도 유지
+      requestAnimationFrame(() => {
+        if (currentExpandedRuleId) {
+          animatedHeights[`rule-${currentExpandedRuleId}`].setValue(1);
+        }
+        currentExpandedTargetIds.forEach(targetId => {
+          animatedHeights[`target-${targetId}`].setValue(1);
+        });
+      });
     } catch (error) {
       console.error('Failed to update node details:', error);
+    } finally {
+      // finally 블록에서 모달 닫기
+      setAnswerSubmitModalVisible(false);
+      setSelectedQuestion(null);
     }
   };
 

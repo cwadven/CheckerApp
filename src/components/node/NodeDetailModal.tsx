@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import type { NodeDetail } from "../../types/node";
 import LockedNodeModal from "./LockedNodeModal";
 import NodeContentModal from "./NodeContentModal";
@@ -55,6 +55,18 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
     }
   };
 
+  const refreshNodeDetail = useCallback(async (targetNodeId: number) => {
+    try {
+      setIsLoading(true);
+      const response = await nodeService.getNodeDetail(targetNodeId);
+      setNode(response.data);
+    } catch (error) {
+      console.error("Failed to refresh node detail:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   if (!node) return null;
 
   if (node.status === "locked") {
@@ -71,6 +83,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
       onMoveToNode={handleMoveToNode}
       variant={node.status}
       isLoading={isLoading}
+      onRefreshNode={refreshNodeDetail}
     />
   );
 };

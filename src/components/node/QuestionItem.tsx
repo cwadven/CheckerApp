@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
+import React from "react";
+import { View, Text, Pressable, StyleSheet, Animated, ViewStyle, TextStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { NodeDetail } from "../../types/node";
-import AnswerContent from "./AnswerContent";
-import AnswerSubmitModal from './AnswerSubmitModal';
-import * as DocumentPicker from 'expo-document-picker';
 
-type DocumentPickerAsset = DocumentPicker.DocumentPickerAsset;
-
-interface TargetItemProps {
+interface QuestionItemProps {
   question: NodeDetail["active_rules"][0]["questions"][0];
   isExpanded: boolean;
   animatedHeight: Animated.Value;
   onToggle: () => void;
   onViewAnswer: () => void;
-  onSubmitAnswer?: () => void;
+  onSubmitAnswer: (questionId: number) => void;
   onMoveToNode: (nodeId: number) => void;
   nodeId: number;
   variant: "completed" | "in_progress" | "locked";
   viewingAnswerId: number | null;
-  variantStyle: any;
+  variantStyle: {
+    actionButton: {
+      container: ViewStyle;
+      text: TextStyle;
+    };
+  };
 }
 
-export const QuestionItem: React.FC<TargetItemProps> = ({
+export const QuestionItem: React.FC<QuestionItemProps> = ({
   question,
   isExpanded,
   animatedHeight,
@@ -35,8 +35,6 @@ export const QuestionItem: React.FC<TargetItemProps> = ({
   viewingAnswerId,
   variantStyle,
 }) => {
-  const [isAnswerSubmitModalVisible, setAnswerSubmitModalVisible] = useState(false);
-
   const getStatusIcon = () => {
     if (variant === "locked") {
       return {
@@ -67,12 +65,6 @@ export const QuestionItem: React.FC<TargetItemProps> = ({
 
   const statusIcon = getStatusIcon();
 
-  const handleSubmitAnswer = async (answer: string, files: DocumentPickerAsset[]) => {
-    // TODO: API를 통해 답변 제출 로직 구현
-    console.log('제출된 답변:', answer);
-    console.log('제출된 파일들:', files);
-  };
-
   const renderActionButton = () => {
     if (variant === "locked") return null;
 
@@ -94,7 +86,7 @@ export const QuestionItem: React.FC<TargetItemProps> = ({
         return (
           <Pressable
             style={[styles.answerButton, styles.submitButton]}
-            onPress={() => setAnswerSubmitModalVisible(true)}
+            onPress={() => onSubmitAnswer(question.id)}
           >
             <Text style={styles.answerButtonText}>
               {question.my_answers && question.my_answers.length > 0
@@ -150,13 +142,6 @@ export const QuestionItem: React.FC<TargetItemProps> = ({
         <Text style={styles.questionDescription}>{question.description}</Text>
         {renderActionButton()}
       </Animated.View>
-
-      <AnswerSubmitModal
-        visible={isAnswerSubmitModalVisible}
-        onClose={() => setAnswerSubmitModalVisible(false)}
-        question={question}
-        onSubmit={handleSubmitAnswer}
-      />
     </View>
   );
 };

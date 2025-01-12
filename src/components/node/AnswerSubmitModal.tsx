@@ -11,45 +11,34 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import { answerSubmitService } from '../../api/services/answerSubmitService';
 import { AlertModal } from '../common/AlertModal';
+import type { AnswerSubmitResponse } from '../../types/answer';
 type DocumentPickerAsset = DocumentPicker.DocumentPickerAsset;
 
 type EnhancedDocumentPickerAsset = DocumentPickerAsset & {
   isExisting?: boolean;
 };
 
-interface AnswerSubmitResponse {
-  status_code: string;
-  data: {
-    member_answer_id: number;
+interface Question {
+  id: number;
+  title: string;
+  description: string;
+  answer_submit_with_text: boolean;
+  answer_submit_with_file: boolean;
+  my_answers?: {
+    id: number;
     answer: string;
-    submitted_at: string;
-    validation_type: string;
-    status: string;
-    feedback: string;
-    going_to_in_progress_node_ids: number[];
-    completed_node_ids: number[];
-  };
+    files: {
+      id: number;
+      name: string;
+      url: string;
+    }[];
+  }[];
 }
 
 interface AnswerSubmitModalProps {
   visible: boolean;
   onClose: () => void;
-  question: {
-    id: number;
-    title: string;
-    description: string;
-    answer_submit_with_text: boolean;
-    answer_submit_with_file: boolean;
-    my_answers?: {
-      id: number;
-      answer: string;
-      files: {
-        id: number;
-        name: string;
-        url: string;
-      }[];
-    }[];
-  };
+  question: Question;
   onSubmit: (response: AnswerSubmitResponse) => void;
 }
 
@@ -160,17 +149,17 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
         question.answer_submit_with_file ? files : null
       );
 
-      onSubmit(response);
+      onClose();
+      setAnswer('');
+      setFiles([]);
 
       setAlertConfig({
         visible: true,
         title: '',
         message: response.data.feedback || '답변이 성공적으로 제출되었습니다.',
-        onConfirm: () => {
+        onConfirm: async () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
-          setAnswer('');
-          setFiles([]);
-          onClose();
+          await onSubmit(response);
         },
       });
     } catch (error) {
