@@ -17,7 +17,10 @@ interface AlertModalProps {
   confirmText?: string;
   cancelText?: string;
   showCancel?: boolean;
-  style?: ViewStyle;
+  style?: ViewStyle & {
+    titleColor?: string;
+    icon?: string;
+  };
 }
 
 export const AlertModal: React.FC<AlertModalProps> = ({
@@ -51,7 +54,14 @@ export const AlertModal: React.FC<AlertModalProps> = ({
           activeOpacity={1} 
           onPress={e => e.stopPropagation()}
         >
-          <Text style={styles.title}>{title}</Text>
+          {style?.icon && (
+            <Text style={[styles.icon, { color: style.titleColor }]}>
+              {style.icon}
+            </Text>
+          )}
+          <Text style={[styles.title, style?.titleColor && { color: style.titleColor }]}>
+            {title}
+          </Text>
           <Text style={styles.message}>{message}</Text>
           <View style={styles.buttonContainer}>
             {showCancel && (
@@ -130,5 +140,9 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#495057',
+  },
+  icon: {
+    fontSize: 48,
+    marginBottom: 16,
   },
 }); 

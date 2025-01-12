@@ -91,11 +91,19 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
     title: string;
     message: string;
     onConfirm: () => void;
+    style: {
+      titleColor: string;
+      icon: string;
+    };
   }>({
     visible: false,
     title: '',
     message: '',
     onConfirm: () => {},
+    style: {
+      titleColor: '#666',
+      icon: '!',
+    },
   });
   const [errors, setErrors] = useState({
     answer: false,
@@ -163,13 +171,42 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
       setAnswer('');
       setFiles([]);
 
+      const alertStyles = {
+        success: { color: '#4CAF50', icon: '✓' },
+        failed: { color: '#dc3545', icon: '✕' },
+        pending: { color: '#2196F3', icon: '⟳' },
+        default: { color: '#666', icon: '!' },
+      };
+
+      const alertTitles = {
+        success: '정답입니다!',
+        failed: '틀렸습니다',
+        pending: '검토 중',
+        default: '알림',
+      };
+
+      const status = response.data.status as keyof typeof alertStyles;
+      const alertStyle = alertStyles[status] || alertStyles.default;
+      const alertTitle = alertTitles[status] || alertTitles.default;
+
+      const defaultMessages = {
+        success: '축하합니다! 다음 단계로 진행하세요.',
+        failed: '다시 한 번 시도해보세요.',
+        pending: '답변이 제출되었습니다. 검토 후 결과를 알려드리겠습니다.',
+        default: '답변이 제출되었습니다.',
+      };
+
       setAlertConfig({
         visible: true,
-        title: '',
-        message: response.data.feedback || '답변이 성공적으로 제출되었습니다.',
+        title: alertTitle,
+        message: response.data.feedback || defaultMessages[status] || defaultMessages.default,
         onConfirm: async () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
           await onSubmit(response);
+        },
+        style: {
+          titleColor: alertStyle.color,
+          icon: alertStyle.icon,
         },
       });
     } catch (error) {
@@ -179,6 +216,10 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
         title: '오류',
         message: formatErrorMessage(apiError),
         onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
+        style: {
+          titleColor: '#dc3545',
+          icon: '✕',
+        },
       });
     } finally {
       setIsSubmitting(false);
@@ -294,7 +335,11 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
         title={alertConfig.title}
         message={alertConfig.message}
         onConfirm={alertConfig.onConfirm}
-        style={alertModalStyles.container}
+        style={{
+          ...alertModalStyles.container,
+          titleColor: alertConfig.style.titleColor,
+          icon: alertConfig.style.icon,
+        }}
       />
     </>
   );
