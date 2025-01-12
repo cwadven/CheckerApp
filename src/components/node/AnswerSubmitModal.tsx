@@ -115,7 +115,7 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
       setAnswer('');
       setFiles([]);
     } else if (question?.my_answers && question.my_answers.length > 0) {
-      const latestAnswer = question.my_answers[question.my_answers.length - 1];
+      const latestAnswer = question.my_answers[0];
       setAnswer(latestAnswer.answer || '');
       
       if (latestAnswer.files) {
