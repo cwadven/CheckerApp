@@ -14,6 +14,7 @@ import { MapHeader } from "../../components/map/MapHeader";
 import { NodeDetailModal } from "../../components/node/NodeDetailModal";
 import type { Node } from "../../types/graph";
 import { nodeService } from "../../api/services/nodeService";
+import type { AnswerSubmitResponse } from '../../types/answer';
 
 export const MapGraphScreen = ({
   route,
@@ -21,6 +22,7 @@ export const MapGraphScreen = ({
 }: RootStackScreenProps<"MapGraph">) => {
   const { mapId, graphData } = route.params;
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
+  const [nodes, setNodes] = useState<Node[]>(graphData.nodes);
   const { width: windowWidth, height: windowHeight } = Dimensions.get("window");
   const [isPanning, setIsPanning] = useState(false);
 
@@ -99,6 +101,22 @@ export const MapGraphScreen = ({
     }
   };
 
+  const handleAnswerSubmit = (response: AnswerSubmitResponse) => {
+    if (response.data.status === 'success') {
+      setNodes(prevNodes => 
+        prevNodes.map(node => {
+          if (response.data.completed_node_ids.includes(node.id)) {
+            return { ...node, status: 'completed' };
+          }
+          if (response.data.going_to_in_progress_node_ids.includes(node.id)) {
+            return { ...node, status: 'in_progress' };
+          }
+          return node;
+        })
+      );
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <MapHeader mapMeta={graphData.meta} onBack={() => navigation.goBack()} />
@@ -132,7 +150,7 @@ export const MapGraphScreen = ({
                 theme={graphData.meta.theme}
               />
 
-              {graphData.nodes.map((node) => (
+              {nodes.map((node) => (
                 <MapNode
                   key={node.id}
                   node={node}
@@ -150,6 +168,7 @@ export const MapGraphScreen = ({
         onClose={() => setSelectedNodeId(null)}
         nodeId={selectedNodeId}
         onMoveToNode={moveToNode}
+        onAnswerSubmit={handleAnswerSubmit}
       />
     </SafeAreaView>
   );

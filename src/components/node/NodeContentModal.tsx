@@ -30,6 +30,7 @@ interface NodeContentModalProps {
   variant: "completed" | "in_progress";
   isLoading?: boolean;
   onRefreshNode: (nodeId: number) => Promise<void>;
+  onAnswerSubmit: (response: AnswerSubmitResponse) => void;
 }
 
 interface VariantStyles {
@@ -95,6 +96,7 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   variant,
   isLoading = false,
   onRefreshNode,
+  onAnswerSubmit,
 }) => {
   const [expandedRuleId, setExpandedRuleId] = useState<number | null>(null);
   const [expandedTargetIds, setExpandedTargetIds] = useState<number[]>([]);
@@ -255,6 +257,11 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
           });
         }, 100);  // 100ms 후 애니메이션 시작
       }, 0);  // 다음 프레임에서 상태 복원
+
+      // 성공 시 상위 컴포넌트에 알림
+      if (response.data.status === 'success') {
+        onAnswerSubmit(response);
+      }
 
     } catch (error) {
       console.error('Failed to update node details:', error);

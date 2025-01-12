@@ -3,12 +3,14 @@ import type { NodeDetail } from "../../types/node";
 import LockedNodeModal from "./LockedNodeModal";
 import NodeContentModal from "./NodeContentModal";
 import { nodeService } from "api/services/nodeService";
+import type { AnswerSubmitResponse } from '../../types/answer';
 
 interface NodeDetailModalProps {
   visible: boolean;
   onClose: () => void;
   nodeId: number | null;
   onMoveToNode?: (nodeId: number) => void;
+  onAnswerSubmit: (response: AnswerSubmitResponse) => void;
 }
 
 export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
@@ -16,6 +18,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
   onClose,
   nodeId,
   onMoveToNode,
+  onAnswerSubmit,
 }) => {
   const [node, setNode] = useState<NodeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +87,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
       variant={node.status}
       isLoading={isLoading}
       onRefreshNode={refreshNodeDetail}
+      onAnswerSubmit={onAnswerSubmit}
     />
   );
 };
