@@ -84,16 +84,28 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
         );
       } else if (variant === "in_progress") {
         return (
-          <Pressable
-            style={[styles.answerButton, styles.submitButton]}
-            onPress={() => onSubmitAnswer(question.id)}
-          >
-            <Text style={styles.answerButtonText}>
-              {question.my_answers && question.my_answers.length > 0
-                ? "정답 수정"
-                : "정답 제출"}
-            </Text>
-          </Pressable>
+          <View style={styles.buttonContainer}>
+            <Pressable
+              style={[styles.answerButton, styles.submitButton]}
+              onPress={() => onSubmitAnswer(question.id)}
+            >
+              <Text style={styles.answerButtonText}>
+                {question.my_answers && question.my_answers.length > 0
+                  ? "정답 수정"
+                  : "정답 제출"}
+              </Text>
+            </Pressable>
+            {question.my_answers && question.my_answers.length > 0 && (
+              <Pressable
+                style={[styles.answerButton, styles.viewAnswerButton]}
+                onPress={onViewAnswer}
+              >
+                <Text style={styles.viewAnswerButtonText}>
+                  {viewingAnswerId === question.id ? "답변 닫기" : "내 답변 보기"}
+                </Text>
+              </Pressable>
+            )}
+          </View>
         );
       }
     } else if (question.by_node_id) {
@@ -212,6 +224,20 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: "#2196F3",
+  },
+  buttonContainer: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  viewAnswerButton: {
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#2196F3',
+  },
+  viewAnswerButtonText: {
+    color: '#2196F3',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 
