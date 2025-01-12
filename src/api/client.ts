@@ -22,6 +22,10 @@ interface LoginCredentials {
   password: string;
 }
 
+interface RequestOptions extends RequestInit {
+  headers?: Record<string, string>;
+}
+
 class ApiClient {
   private baseUrl: string;
   private guestToken: string | null = null;
@@ -141,6 +145,36 @@ class ApiClient {
       return data;
     } catch (error) {
       console.error("❌ Login failed:", error);
+      throw error;
+    }
+  }
+
+  async post<T>(endpoint: string, body: any, options: RequestOptions = {}): Promise<T> {
+    try {
+      const token = await this.getGuestToken();
+      
+      const headers = {
+        'Accept': 'application/json',
+        ...(token && { 'Authorization': `jwt ${token}` }),
+        ...options.headers,
+      };
+
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        method: 'POST',
+        body: body instanceof FormData ? body : JSON.stringify(body),
+        headers,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw data;
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`❌ API Error: ${endpoint}`, error);
       throw error;
     }
   }

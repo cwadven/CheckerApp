@@ -18,6 +18,8 @@ import AnswerContent from "./AnswerContent";
 import QuestionItem from "./QuestionItem";
 import RuleItem from "./RuleItem";
 import AnswerModal from "./AnswerModal";
+import AnswerSubmitModal from "./AnswerSubmitModal";
+import { nodeService } from "../../api/services/nodeService";
 
 interface NodeContentModalProps {
   isVisible: boolean;
@@ -83,6 +85,21 @@ const VARIANT_STYLES: Record<"completed" | "in_progress", VariantStyles> = {
   },
 };
 
+// AnswerSubmitResponse 타입 추가
+interface AnswerSubmitResponse {
+  status_code: string;
+  data: {
+    member_answer_id: number;
+    answer: string;
+    submitted_at: string;
+    validation_type: string;
+    status: string;
+    feedback: string;
+    going_to_in_progress_node_ids: number[];
+    completed_node_ids: number[];
+  };
+}
+
 export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   isVisible,
   onClose,
@@ -96,6 +113,8 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   const scrollViewRef = useRef<ScrollView>(null);
   const animatedHeights = useRef<{ [key: string]: Animated.Value }>({}).current;
   const [viewingAnswerId, setViewingAnswerId] = useState<number | null>(null);
+  const [isAnswerSubmitModalVisible, setAnswerSubmitModalVisible] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
 
   // 초기화 로직
   React.useEffect(() => {
@@ -216,6 +235,40 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
         .find((q) => q.id === viewingAnswerId)?.my_answers
     : undefined;
 
+  const handleSubmitAnswer = async (response: AnswerSubmitResponse) => {
+    try {
+      // 노드 정보 갱신
+      const updatedNodeDetail = await nodeService.getNodeDetail(node.id);
+      // 상태 업데이트
+      onMoveToNode?.(node.id);
+      
+      // 필요한 경우 다른 상태 업데이트
+      if (response.data.going_to_in_progress_node_ids.length > 0) {
+        // 새로 활성화된 노드가 있는 경우 처리
+        console.log('New in-progress nodes:', response.data.going_to_in_progress_node_ids);
+      }
+      
+      if (response.data.completed_node_ids.length > 0) {
+        // 완료된 노드가 있는 경우 처리
+        console.log('Completed nodes:', response.data.completed_node_ids);
+      }
+    } catch (error) {
+      console.error('Failed to update node details:', error);
+    }
+  };
+
+  // QuestionItem의 onSubmitAnswer prop 수정
+  const handleQuestionSubmit = (questionId: number) => {
+    const question = node.active_rules
+      .flatMap((rule) => rule.questions)
+      .find((q) => q.id === questionId);
+
+    if (question) {
+      setSelectedQuestion(question);
+      setAnswerSubmitModalVisible(true);
+    }
+  };
+
   return (
     <>
       <Modal
@@ -317,13 +370,7 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
                       nodeId={node.id}
                       viewingAnswerId={viewingAnswerId}
                       variantStyle={variantStyle}
-                      onSubmitAnswer={(questionId: number) => {
-                        // TODO: 답변 제출/수정 모달 열기
-                        console.log(
-                          "Submit/Edit answer for question:",
-                          questionId
-                        );
-                      }}
+                      onSubmitAnswer={handleQuestionSubmit}
                     />
                   ))}
                 </View>
@@ -337,6 +384,13 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
         visible={viewingAnswerId !== null}
         onClose={handleCloseAnswer}
         answers={answers}
+      />
+
+      <AnswerSubmitModal
+        visible={isAnswerSubmitModalVisible}
+        onClose={() => setAnswerSubmitModalVisible(false)}
+        question={selectedQuestion}
+        onSubmit={handleSubmitAnswer}
       />
     </>
   );

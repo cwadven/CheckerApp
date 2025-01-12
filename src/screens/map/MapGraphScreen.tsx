@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, SafeAreaView, Dimensions } from "react-native";
+import { View, StyleSheet, SafeAreaView, Dimensions, Platform } from "react-native";
 import type { RootStackScreenProps } from "../../types/navigation";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -22,6 +22,7 @@ export const MapGraphScreen = ({
   const { mapId, graphData } = route.params;
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const { width: windowWidth, height: windowHeight } = Dimensions.get("window");
+  const [isPanning, setIsPanning] = useState(false);
 
   // graphData 유효성 검사
   if (
@@ -57,6 +58,7 @@ export const MapGraphScreen = ({
     Gesture.Pan()
       .minPointers(1)
       .onStart(() => {
+        setIsPanning(true);
         start.value = { x: offset.value.x, y: offset.value.y };
       })
       .onUpdate((e) => {
@@ -66,7 +68,11 @@ export const MapGraphScreen = ({
         };
       })
       .onEnd(() => {
+        setIsPanning(false);
         savedOffset.value = offset.value;
+      })
+      .onFinalize(() => {
+        setIsPanning(false);
       })
   );
 
@@ -98,7 +104,10 @@ export const MapGraphScreen = ({
       <MapHeader mapMeta={graphData.meta} onBack={() => navigation.goBack()} />
 
       <GestureDetector gesture={gesture}>
-        <Animated.View style={styles.graphWrapper}>
+        <Animated.View style={[
+          styles.graphWrapper,
+          Platform.OS === 'web' && { cursor: isPanning ? 'grabbing' : 'grab' }
+        ]}>
           <Animated.View style={[styles.graphContainer, animatedStyle]}>
             <View
               style={[
