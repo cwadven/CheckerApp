@@ -146,6 +146,7 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
   };
 
   const handleSubmit = async () => {
+    let response: AnswerSubmitResponse | undefined;
     try {
       setIsSubmitting(true);
       
@@ -161,15 +162,11 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
         return;
       }
 
-      const response = await answerSubmitService.submitAnswer(
+      response = await answerSubmitService.submitAnswer(
         question.id,
         question.answer_submit_with_text ? answer : null,
         question.answer_submit_with_file ? files : null
       );
-
-      onClose();
-      setAnswer('');
-      setFiles([]);
 
       const alertStyles = {
         success: { color: '#4CAF50', icon: '✓' },
@@ -202,7 +199,15 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
         message: response.data.feedback || defaultMessages[status] || defaultMessages.default,
         onConfirm: async () => {
           setAlertConfig(prev => ({ ...prev, visible: false }));
-          await onSubmit(response);
+          if (response) {
+            await onSubmit(response);
+            
+            if (response.data.status === 'success') {
+              onClose();
+              setAnswer('');
+              setFiles([]);
+            }
+          }
         },
         style: {
           titleColor: alertStyle.color,
@@ -330,17 +335,33 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
         </Modal>
       )}
 
-      <AlertModal
-        visible={alertConfig.visible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        onConfirm={alertConfig.onConfirm}
-        style={{
-          ...alertModalStyles.container,
-          titleColor: alertConfig.style.titleColor,
-          icon: alertConfig.style.icon,
-        }}
-      />
+      <Modal 
+        visible={alertConfig.visible} 
+        transparent 
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
+      >
+        <View style={[
+          StyleSheet.absoluteFill,
+          {
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 9999,
+            elevation: 9999,
+          }
+        ]}>
+          <AlertModal
+            visible={alertConfig.visible}
+            title={alertConfig.title}
+            message={alertConfig.message}
+            onConfirm={alertConfig.onConfirm}
+            style={{
+              titleColor: alertConfig.style.titleColor,
+              icon: alertConfig.style.icon,
+            }}
+          />
+        </View>
+      </Modal>
     </>
   );
 };

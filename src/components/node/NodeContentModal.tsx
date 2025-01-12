@@ -225,32 +225,56 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
 
   const handleSubmitAnswer = async (response: AnswerSubmitResponse) => {
     try {
-      // 현재 확장된 상태 저장
+      // 현재 상태 저장
       const currentExpandedRuleId = expandedRuleId;
       const currentExpandedTargetIds = [...expandedTargetIds];
 
       // 노드 정보 갱신
       await onRefreshNode(node.id);
       
-      // 확장 상태 유지
-      setExpandedRuleId(currentExpandedRuleId);
-      setExpandedTargetIds(currentExpandedTargetIds);
+      // 상태 복원을 위한 지연 처리
+      setTimeout(() => {
+        // 확장 상태 복원
+        setExpandedRuleId(currentExpandedRuleId);
+        setExpandedTargetIds(currentExpandedTargetIds);
 
-      // 애니메이션 값도 유지
-      requestAnimationFrame(() => {
-        if (currentExpandedRuleId) {
-          animatedHeights[`rule-${currentExpandedRuleId}`].setValue(1);
-        }
-        currentExpandedTargetIds.forEach(targetId => {
-          animatedHeights[`target-${targetId}`].setValue(1);
-        });
-      });
+        // 약간의 지연 후 애니메이션 실행
+        setTimeout(() => {
+          // Rule 애니메이션
+          if (currentExpandedRuleId) {
+            const ruleHeight = animatedHeights[`rule-${currentExpandedRuleId}`];
+            if (ruleHeight) {
+              ruleHeight.setValue(0);  // 먼저 0으로 설정
+              Animated.timing(ruleHeight, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: false,
+              }).start();
+            }
+          }
+
+          // Target 애니메이션
+          currentExpandedTargetIds.forEach(targetId => {
+            const targetHeight = animatedHeights[`target-${targetId}`];
+            if (targetHeight) {
+              targetHeight.setValue(0);  // 먼저 0으로 설정
+              Animated.timing(targetHeight, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: false,
+              }).start();
+            }
+          });
+        }, 100);  // 100ms 후 애니메이션 시작
+      }, 0);  // 다음 프레임에서 상태 복원
+
     } catch (error) {
       console.error('Failed to update node details:', error);
     } finally {
-      // finally 블록에서 모달 닫기
-      setAnswerSubmitModalVisible(false);
-      setSelectedQuestion(null);
+      if (response.data.status === 'success') {
+        setAnswerSubmitModalVisible(false);
+        setSelectedQuestion(null);
+      }
     }
   };
 
