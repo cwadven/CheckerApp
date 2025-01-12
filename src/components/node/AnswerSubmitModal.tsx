@@ -70,6 +70,13 @@ const formatErrorMessage = (apiError: ApiError): string => {
   ].join('\n');
 };
 
+const alertModalStyles = StyleSheet.create({
+  container: {
+    zIndex: 9999,
+    elevation: 9999,
+  },
+});
+
 export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
   visible,
   onClose,
@@ -89,6 +96,10 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
     title: '',
     message: '',
     onConfirm: () => {},
+  });
+  const [errors, setErrors] = useState({
+    answer: false,
+    files: false,
   });
 
   useEffect(() => {
@@ -129,17 +140,16 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
+      
+      setErrors({ answer: false, files: false });
 
-      if (
-        (question.answer_submit_with_text && !answer.trim()) ||
-        (question.answer_submit_with_file && files.length === 0)
-      ) {
-        setAlertConfig({
-          visible: true,
-          title: '입력 오류',
-          message: '필요한 모든 항목을 입력해주세요.',
-          onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false })),
-        });
+      const newErrors = {
+        answer: question.answer_submit_with_text && !answer.trim(),
+        files: question.answer_submit_with_file && files.length === 0,
+      };
+
+      if (newErrors.answer || newErrors.files) {
+        setErrors(newErrors);
         return;
       }
 
@@ -191,26 +201,47 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
               <ScrollView style={styles.contentContainer}>
                 {question.answer_submit_with_text && (
                   <View style={styles.answerSection}>
-                    <Text style={styles.sectionTitle}>답변 작성</Text>
+                    <Text style={styles.sectionTitle}>
+                      답변 작성
+                      <Text style={styles.required}> *</Text>
+                    </Text>
                     <TextInput
-                      style={styles.textInput}
+                      style={[
+                        styles.textInput,
+                        errors.answer && styles.errorInput
+                      ]}
                       multiline
                       value={answer}
-                      onChangeText={setAnswer}
+                      onChangeText={(text) => {
+                        setAnswer(text);
+                        setErrors(prev => ({ ...prev, answer: false }));
+                      }}
                       placeholder="답변을 입력해주세요"
                     />
+                    {errors.answer && (
+                      <Text style={styles.errorText}>답변을 입력해주세요</Text>
+                    )}
                   </View>
                 )}
 
                 {question.answer_submit_with_file && (
                   <View style={styles.fileSection}>
-                    <Text style={styles.sectionTitle}>파일 첨부(필수)</Text>
+                    <Text style={styles.sectionTitle}>
+                      파일 첨부
+                      <Text style={styles.required}> *</Text>
+                    </Text>
                     <TouchableOpacity 
-                      style={styles.fileButton}
+                      style={[
+                        styles.fileButton,
+                        errors.files && styles.errorButton
+                      ]}
                       onPress={handleFilePick}
                     >
                       <Text style={styles.buttonText}>파일 선택</Text>
                     </TouchableOpacity>
+                    {errors.files && (
+                      <Text style={styles.errorText}>파일을 첨부해주세요</Text>
+                    )}
 
                     {files.map((file, index) => (
                       <View key={index} style={styles.fileItem}>
@@ -263,6 +294,7 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
         title={alertConfig.title}
         message={alertConfig.message}
         onConfirm={alertConfig.onConfirm}
+        style={alertModalStyles.container}
       />
     </>
   );
@@ -373,6 +405,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+  required: {
+    color: '#dc3545',
+    fontWeight: 'bold',
+  },
+  errorInput: {
+    borderColor: '#dc3545',
+    borderWidth: 2,
+  },
+  errorButton: {
+    backgroundColor: '#dc3545',
+  },
+  errorText: {
+    color: '#dc3545',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

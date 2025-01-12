@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  ViewStyle,
 } from 'react-native';
 
 interface AlertModalProps {
@@ -16,6 +17,7 @@ interface AlertModalProps {
   confirmText?: string;
   cancelText?: string;
   showCancel?: boolean;
+  style?: ViewStyle;
 }
 
 export const AlertModal: React.FC<AlertModalProps> = ({
@@ -27,6 +29,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   confirmText = '확인',
   cancelText = '취소',
   showCancel = false,
+  style,
 }) => {
   return (
     <Modal
@@ -34,13 +37,20 @@ export const AlertModal: React.FC<AlertModalProps> = ({
       transparent
       animationType="fade"
       onRequestClose={onCancel}
+      statusBarTranslucent
     >
-      <TouchableOpacity 
-        style={styles.container} 
-        activeOpacity={1} 
-        onPress={onCancel}
+      <View 
+        style={[
+          styles.container, 
+          style,
+          { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
+        ]}
       >
-        <View style={styles.content}>
+        <TouchableOpacity 
+          style={styles.content} 
+          activeOpacity={1} 
+          onPress={e => e.stopPropagation()}
+        >
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
           <View style={styles.buttonContainer}>
@@ -61,8 +71,8 @@ export const AlertModal: React.FC<AlertModalProps> = ({
               <Text style={styles.buttonText}>{confirmText}</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
     </Modal>
   );
 };
@@ -73,6 +83,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 999999,
+    elevation: 999999,
   },
   content: {
     backgroundColor: 'white',
