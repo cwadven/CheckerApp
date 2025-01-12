@@ -70,13 +70,6 @@ const formatErrorMessage = (apiError: ApiError): string => {
   ].join('\n');
 };
 
-const alertModalStyles = StyleSheet.create({
-  container: {
-    zIndex: 9999,
-    elevation: 9999,
-  },
-});
-
 export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
   visible,
   onClose,
@@ -201,12 +194,6 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
           setAlertConfig(prev => ({ ...prev, visible: false }));
           if (response) {
             await onSubmit(response);
-            
-            if (response.data.status === 'success') {
-              onClose();
-              setAnswer('');
-              setFiles([]);
-            }
           }
         },
         style: {

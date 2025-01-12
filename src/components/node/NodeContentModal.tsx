@@ -203,19 +203,7 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
     setViewingAnswerId(null);
   };
 
-  // 답변 상태에 따른 스타일
-  const getAnswerStatus = (answer: { is_correct: boolean | null }) => {
-    if (answer.is_correct === null) return "검토중";
-    return answer.is_correct ? "승인됨" : "거절됨";
-  };
-
-  const getAnswerStatusColor = (answer: { is_correct: boolean | null }) => {
-    if (answer.is_correct === null) return "#2196F3";
-    return answer.is_correct ? "#4CAF50" : "#F44336";
-  };
-
   const variantStyle = VARIANT_STYLES[variant];
-  const statusText = variant === "completed" ? "완료됨" : "진행 중";
 
   const answers = viewingAnswerId
     ? node.active_rules
@@ -346,7 +334,6 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
                         size={20}
                         color={variantStyle.statusIcon.color}
                       />
-                      <Text style={styles.statusText}>{statusText}</Text>
                     </View>
                     {node.statistic && (
                       <View style={styles.statisticContainer}>
