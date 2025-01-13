@@ -12,7 +12,7 @@ import { MapArrows } from "../../components/map/MapArrows";
 import { MapNode } from "../../components/map/MapNode";
 import { MapHeader } from "../../components/map/MapHeader";
 import { NodeDetailModal } from "../../components/node/NodeDetailModal";
-import type { Node } from "../../types/graph";
+import type { Node, Arrow } from "../../types/graph";
 import { nodeService } from "../../api/services/nodeService";
 import type { AnswerSubmitResponse } from '../../types/answer';
 
@@ -23,6 +23,7 @@ export const MapGraphScreen = ({
   const { mapId, graphData } = route.params;
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [nodes, setNodes] = useState<Node[]>(graphData.nodes);
+  const [arrows, setArrows] = useState<Arrow[]>(graphData.arrows);
   const { width: windowWidth, height: windowHeight } = Dimensions.get("window");
   const [isPanning, setIsPanning] = useState(false);
 
@@ -91,7 +92,7 @@ export const MapGraphScreen = ({
   };
 
   const moveToNode = (nodeId: number) => {
-    const node = graphData.nodes.find((n) => n.id === nodeId);
+    const node = nodes.find((n: Node) => n.id === nodeId);
     if (node) {
       offset.value = withSpring({
         x: -node.position_x + windowWidth / 2 - 50,
@@ -113,6 +114,15 @@ export const MapGraphScreen = ({
           }
           return node;
         })
+      );
+
+      setArrows((prevArrows: Arrow[]) => 
+        prevArrows.map(arrow => ({
+          ...arrow,
+          status: response.data.completed_arrow_ids.includes(arrow.id) 
+            ? 'completed' 
+            : arrow.status
+        }))
       );
     }
   };
@@ -145,8 +155,8 @@ export const MapGraphScreen = ({
               <MapArrows
                 width={graphData.meta.layout.width}
                 height={graphData.meta.layout.height}
-                arrows={graphData.arrows}
-                nodes={graphData.nodes}
+                arrows={arrows}
+                nodes={nodes}
                 theme={graphData.meta.theme}
               />
 

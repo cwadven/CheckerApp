@@ -9,5 +9,6 @@ export interface AnswerSubmitResponse {
     feedback: string;
     going_to_in_progress_node_ids: number[];
     completed_node_ids: number[];
+    completed_arrow_ids: number[];
   };
 } 
