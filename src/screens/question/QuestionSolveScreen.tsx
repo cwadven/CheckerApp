@@ -97,7 +97,9 @@ export const QuestionSolveScreen = () => {
         {/* 문제 설명 */}
         <View style={styles.questionSection}>
           <Text style={styles.sectionTitle}>문제 설명</Text>
-          <Text style={styles.description}>{description}</Text>
+          <Text style={styles.description}>
+            {description?.replace(/\\n/g, '\n')}
+          </Text>
         </View>
 
         {/* 답변 입력 */}

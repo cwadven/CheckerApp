@@ -151,7 +151,9 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
           },
         ]}
       >
-        <Text style={styles.questionDescription}>{question.description}</Text>
+        <Text style={styles.questionDescription}>
+          {question.description?.replace(/\\n/g, '\n')}
+        </Text>
         {renderActionButton()}
       </Animated.View>
     </View>

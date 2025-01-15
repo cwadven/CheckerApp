@@ -229,7 +229,9 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.title}>{question.title}</Text>
-              <Text style={styles.description}>{question.description}</Text>
+              <Text style={styles.description}>
+                {question.description?.replace(/\\n/g, '\n')}
+              </Text>
 
               <ScrollView style={styles.contentContainer}>
                 {question.answer_submit_with_text && (
