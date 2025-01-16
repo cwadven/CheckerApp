@@ -69,11 +69,10 @@ export const RuleItem: React.FC<RuleItemProps> = ({
         style={[
           styles.ruleContent,
           {
-            maxHeight:
-              animatedHeight?.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 500],
-              }) || 0,
+            maxHeight: animatedHeight?.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 5000],
+            }) || 0,
             opacity: animatedHeight || 0,
           },
         ]}
@@ -137,6 +136,7 @@ const styles = StyleSheet.create({
   },
   questionsContainer: {
     gap: 8,
+    paddingBottom: 16,
   },
 });
 

@@ -326,70 +326,73 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
                 </Text>
               </View>
             ) : (
-              <ScrollView
-                ref={scrollViewRef}
-                style={[
-                  styles.content,
-                  node.background_image ? styles.contentWithBackground : null,
-                ]}
-              >
-                <View style={styles.section}>
-                  <View style={styles.statusSection}>
-                    <View style={styles.statusContainer}>
-                      <Ionicons
-                        name={variantStyle.statusIcon.name as any}
-                        size={20}
-                        color={variantStyle.statusIcon.color}
-                      />
-                    </View>
-                    {node.statistic && (
-                      <View style={styles.statisticContainer}>
-                        <View style={styles.statisticItem}>
-                          <Ionicons name="people" size={16} color="#2196F3" />
-                          <Text style={styles.statisticText}>
-                            {node.statistic.activated_member_count}명 진행 중
-                          </Text>
-                        </View>
-                        <Text style={styles.statisticDivider}>•</Text>
-                        <View style={styles.statisticItem}>
-                          <Ionicons
-                            name="checkmark-done-circle"
-                            size={16}
-                            color="#4CAF50"
-                          />
-                          <Text style={styles.statisticText}>
-                            {node.statistic.completed_member_count}명 완료
-                          </Text>
-                        </View>
+              <View style={styles.scrollContainer}>
+                <ScrollView
+                  ref={scrollViewRef}
+                  style={styles.content}
+                  contentContainerStyle={[
+                    styles.contentContainer,
+                    node.background_image ? styles.contentWithBackground : null
+                  ]}
+                >
+                  <View style={styles.section}>
+                    <View style={styles.statusSection}>
+                      <View style={styles.statusContainer}>
+                        <Ionicons
+                          name={variantStyle.statusIcon.name as any}
+                          size={20}
+                          color={variantStyle.statusIcon.color}
+                        />
                       </View>
-                    )}
+                      {node.statistic && (
+                        <View style={styles.statisticContainer}>
+                          <View style={styles.statisticItem}>
+                            <Ionicons name="people" size={16} color="#2196F3" />
+                            <Text style={styles.statisticText}>
+                              {node.statistic.activated_member_count}명 진행 중
+                            </Text>
+                          </View>
+                          <Text style={styles.statisticDivider}>•</Text>
+                          <View style={styles.statisticItem}>
+                            <Ionicons
+                              name="checkmark-done-circle"
+                              size={16}
+                              color="#4CAF50"
+                            />
+                            <Text style={styles.statisticText}>
+                              {node.statistic.completed_member_count}명 완료
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+                    </View>
+
+                    <Text style={styles.title}>{node.title}</Text>
+                    <Text style={styles.description}>{node.description}</Text>
+
+                    {/* Active Rules 목록 */}
+                    {node.active_rules.map((rule) => (
+                      <RuleItem
+                        key={rule.id}
+                        rule={rule}
+                        isExpanded={expandedRuleId === rule.id}
+                        animatedHeight={animatedHeights[`rule-${rule.id}`]}
+                        onToggle={() => toggleRule(rule.id)}
+                        variant={variant}
+                        expandedTargetIds={expandedTargetIds}
+                        animatedHeights={animatedHeights}
+                        onToggleTarget={handleToggleTarget}
+                        onViewAnswer={handleViewAnswer}
+                        onMoveToNode={handleMoveToNode}
+                        nodeId={node.id}
+                        viewingAnswerId={viewingAnswerId}
+                        variantStyle={variantStyle}
+                        onSubmitAnswer={handleQuestionSubmit}
+                      />
+                    ))}
                   </View>
-
-                  <Text style={styles.title}>{node.title}</Text>
-                  <Text style={styles.description}>{node.description}</Text>
-
-                  {/* Active Rules 목록 */}
-                  {node.active_rules.map((rule) => (
-                    <RuleItem
-                      key={rule.id}
-                      rule={rule}
-                      isExpanded={expandedRuleId === rule.id}
-                      animatedHeight={animatedHeights[`rule-${rule.id}`]}
-                      onToggle={() => toggleRule(rule.id)}
-                      variant={variant}
-                      expandedTargetIds={expandedTargetIds}
-                      animatedHeights={animatedHeights}
-                      onToggleTarget={handleToggleTarget}
-                      onViewAnswer={handleViewAnswer}
-                      onMoveToNode={handleMoveToNode}
-                      nodeId={node.id}
-                      viewingAnswerId={viewingAnswerId}
-                      variantStyle={variantStyle}
-                      onSubmitAnswer={handleQuestionSubmit}
-                    />
-                  ))}
-                </View>
-              </ScrollView>
+                </ScrollView>
+              </View>
             )}
           </View>
         </View>
@@ -420,10 +423,12 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    maxHeight: "80%",
+    maxHeight: "90%",
     backgroundColor: "white",
     borderRadius: 12,
     overflow: "hidden",
+    flexDirection: 'column',
+    flex: 1,
   },
   header: {
     flexDirection: "row",
@@ -464,13 +469,18 @@ const styles = StyleSheet.create({
     height: 160,
   },
   content: {
+    flex: 1,
+  },
+  contentContainer: {
     padding: 16,
+    flexGrow: 1,
+    paddingBottom: 100,
   },
   contentWithBackground: {
     marginTop: 100,
   },
   section: {
-    marginBottom: 16,
+    paddingBottom: 32,
   },
   statusSection: {
     marginBottom: 16,
@@ -543,9 +553,11 @@ const styles = StyleSheet.create({
   },
   ruleContent: {
     overflow: "hidden",
+    maxHeight: undefined,
   },
   questionsContainer: {
     gap: 8,
+    paddingBottom: 16,
   },
   answerItem: {
     backgroundColor: "white",
@@ -606,6 +618,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 14,
     color: "#666",
+  },
+  scrollContainer: {
+    flex: 1,
+    minHeight: 0,
   },
 });
 
