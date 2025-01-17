@@ -55,30 +55,51 @@ export const calculateArrowPath = (
   const endCenter = getNodeCenter(endNode);
   const startCenter = getNodeCenter(startNode);
 
-  const angles = sameRuleArrows.map(a => {
-    const node = nodes.find(n => n.id === a.start_node_id);
-    if (!node) return null;
-    const nodeCenter = getNodeCenter(node);
-    const dx = nodeCenter.x - endCenter.x;
-    const dy = nodeCenter.y - endCenter.y;
-    return Math.atan2(dy, dx);
-  }).filter(Boolean) as number[];
+  // 현재 화살표의 기본 방향 계산
+  const baseAngle = Math.atan2(
+    endCenter.y - startCenter.y,
+    endCenter.x - startCenter.x
+  );
 
-  const avgAngle = angles.reduce((sum, angle) => sum + angle, 0) / angles.length;
+  // 화살표가 하나면 기본 방향 사용
+  if (sameRuleArrows.length <= 1) {
+    const endNodeRadius = getNodeRadius(endNode);
+    const startNodeRadius = getNodeRadius(startNode);
+
+    return {
+      startX: startCenter.x + Math.cos(baseAngle) * startNodeRadius,
+      startY: startCenter.y + Math.sin(baseAngle) * startNodeRadius,
+      endX: endCenter.x - Math.cos(baseAngle) * endNodeRadius,
+      endY: endCenter.y - Math.sin(baseAngle) * endNodeRadius,
+    };
+  }
+
+  // 여러 화살표의 평균 방향 계산
+  const validAngles = sameRuleArrows
+    .map(a => {
+      const node = nodes.find(n => n.id === a.start_node_id);
+      if (!node) return null;
+      const nodeCenter = getNodeCenter(node);
+      return Math.atan2(
+        endCenter.y - nodeCenter.y,
+        endCenter.x - nodeCenter.x
+      );
+    })
+    .filter((angle): angle is number => angle !== null);
+
+  const avgAngle = validAngles.length > 0
+    ? validAngles.reduce((sum, angle) => sum + angle, 0) / validAngles.length
+    : baseAngle;
 
   const endNodeRadius = getNodeRadius(endNode);
   const startNodeRadius = getNodeRadius(startNode);
 
-  const targetX = endCenter.x + Math.cos(avgAngle) * endNodeRadius;
-  const targetY = endCenter.y + Math.sin(avgAngle) * endNodeRadius;
-
-  const angle = Math.atan2(targetY - startCenter.y, targetX - startCenter.x);
-  const adjustedStartX = startCenter.x + Math.cos(angle) * startNodeRadius;
-  const adjustedStartY = startCenter.y + Math.sin(angle) * startNodeRadius;
+  const targetX = endCenter.x - Math.cos(avgAngle) * endNodeRadius;
+  const targetY = endCenter.y - Math.sin(avgAngle) * endNodeRadius;
 
   return {
-    startX: adjustedStartX,
-    startY: adjustedStartY,
+    startX: startCenter.x + Math.cos(baseAngle) * startNodeRadius,
+    startY: startCenter.y + Math.sin(baseAngle) * startNodeRadius,
     endX: targetX,
     endY: targetY,
   };
