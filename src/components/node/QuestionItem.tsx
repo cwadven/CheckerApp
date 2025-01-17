@@ -66,7 +66,7 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
   const statusIcon = getStatusIcon();
 
   const renderActionButton = () => {
-    if (question.id && question.status === "locked") return null;
+    if ((question.by_node_id === nodeId && !question.answer_submittable) || (question.id && question.status === "locked")) return null;
 
     if (question.by_node_id === nodeId) {
       if (question.status === "completed") {

@@ -29,6 +29,7 @@ export interface NodeDetail {
       title: string;
       description: string;
       status: string;
+      answer_submittable: boolean;
       by_node_id: number;
       answer_submit_with_text: boolean;
       answer_submit_with_file: boolean;
