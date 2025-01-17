@@ -87,7 +87,7 @@ export const RuleItem: React.FC<RuleItemProps> = ({
         <View style={styles.questionsContainer}>
           {rule.questions.map((question) => (
             <QuestionItem
-              key={question.id}
+              key={question.arrow_id}
               question={question}
               isExpanded={expandedTargetIds.includes(question.arrow_id)}
               animatedHeight={animatedHeights[`target-${question.arrow_id}`]}

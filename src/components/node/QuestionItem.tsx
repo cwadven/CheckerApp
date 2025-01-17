@@ -36,7 +36,7 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
   variantStyle,
 }) => {
   const getStatusIcon = () => {
-    if (variant === "locked") {
+    if (question.status === "locked") {
       return {
         name: "lock-closed",
         color: "#9E9E9E",
@@ -50,7 +50,7 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
       };
     }
 
-    if (variant === "in_progress") {
+    if (question.status === "in_progress") {
       return {
         name: "time",
         color: "#2196F3",
@@ -66,23 +66,21 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
   const statusIcon = getStatusIcon();
 
   const renderActionButton = () => {
-    if (variant === "locked") return null;
+    if (question.id && question.status === "locked") return null;
 
     if (question.by_node_id === nodeId) {
-      if (variant === "completed") {
+      if (question.status === "completed") {
         return (
           <Pressable
             style={[styles.answerButton, variantStyle.actionButton.container]}
             onPress={onViewAnswer}
           >
-            <Text
-              style={[styles.answerButtonText, variantStyle.actionButton.text]}
-            >
+            <Text style={[styles.answerButtonText, variantStyle.actionButton.text]}>
               {viewingAnswerId === question.id ? "답변 닫기" : "내 답변 보기"}
             </Text>
           </Pressable>
         );
-      } else if (variant === "in_progress") {
+      } else if (question.status === "in_progress") {
         return (
           <View style={styles.buttonContainer}>
             <Pressable
