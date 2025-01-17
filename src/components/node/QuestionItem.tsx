@@ -66,7 +66,7 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
   const statusIcon = getStatusIcon();
 
   const renderActionButton = () => {
-    if ((question.by_node_id === nodeId && !question.answer_submittable) || (question.id && question.status === "locked")) return null;
+    if ((question.id && question.status === "locked")) return null;
 
     if (question.by_node_id === nodeId) {
       if (question.status === "completed") {
@@ -81,6 +81,9 @@ export const QuestionItem: React.FC<QuestionItemProps> = ({
           </Pressable>
         );
       } else if (question.status === "in_progress") {
+        if (!question.answer_submittable) {
+          return null;
+        }
         return (
           <View style={styles.buttonContainer}>
             <Pressable
