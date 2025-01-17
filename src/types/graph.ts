@@ -3,7 +3,9 @@ export interface Node {
   name: string;
   position_x: number;
   position_y: number;
-  status: "in_progress" | "locked" | "completed";
+  width?: number;
+  height?: number;
+  status: "completed" | "in_progress" | "locked";
 }
 
 export interface Arrow {

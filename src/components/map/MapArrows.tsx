@@ -12,16 +12,30 @@ interface MapArrowsProps {
   theme: MapGraphMeta["theme"];
 }
 
-// 노드 관련 상수
-const NODE_WIDTH = 100;
-const NODE_HEIGHT = 80;
-const NODE_CENTER_X = NODE_WIDTH / 2;  // 50
-const NODE_CENTER_Y = NODE_HEIGHT / 2;  // 40
-const NODE_RADIUS = 40;
+// 노드 관련 기본 상수
+const DEFAULT_NODE_SIZE = {
+  width: 100,
+  height: 100,
+};
 
 // 화살표 관련 상수
 const ARROW_HEAD_LENGTH = 15;
 const ARROW_STROKE_WIDTH = 2;
+
+const getNodeCenter = (node: Node) => {
+  const width = node.width || DEFAULT_NODE_SIZE.width;
+  const height = node.height || DEFAULT_NODE_SIZE.height;
+  return {
+    x: node.position_x + width / 2,
+    y: node.position_y + height / 2,
+  };
+};
+
+const getNodeRadius = (node: Node) => {
+  const width = node.width || DEFAULT_NODE_SIZE.width;
+  const height = node.height || DEFAULT_NODE_SIZE.height;
+  return Math.min(width, height) / 2;
+};
 
 export const calculateArrowPath = (
   arrow: Arrow,
@@ -33,39 +47,34 @@ export const calculateArrowPath = (
 
   if (!startNode || !endNode) return null;
 
-  // 같은 active_rule_id를 가진 화살표들의 시작점들 찾기
   const sameRuleArrows = arrows.filter(a => 
     a.end_node_id === arrow.end_node_id && 
     a.active_rule_id === arrow.active_rule_id
   );
 
-  // 시작점들의 중심점 계산
-  const centerX = endNode.position_x + NODE_CENTER_X;
-  const centerY = endNode.position_y + NODE_CENTER_Y;
+  const endCenter = getNodeCenter(endNode);
+  const startCenter = getNodeCenter(startNode);
 
-  // 현재 화살표의 시작점
-  const startX = startNode.position_x + NODE_CENTER_X;
-  const startY = startNode.position_y + NODE_CENTER_Y;
-
-  // 시작점들의 평균 각도 계산
   const angles = sameRuleArrows.map(a => {
     const node = nodes.find(n => n.id === a.start_node_id);
     if (!node) return null;
-    const dx = (node.position_x + NODE_CENTER_X) - centerX;
-    const dy = (node.position_y + NODE_CENTER_Y) - centerY;
+    const nodeCenter = getNodeCenter(node);
+    const dx = nodeCenter.x - endCenter.x;
+    const dy = nodeCenter.y - endCenter.y;
     return Math.atan2(dy, dx);
   }).filter(Boolean) as number[];
 
   const avgAngle = angles.reduce((sum, angle) => sum + angle, 0) / angles.length;
 
-  // 평균 각도를 사용하여 도착점 계산
-  const targetX = centerX + Math.cos(avgAngle) * NODE_RADIUS;
-  const targetY = centerY + Math.sin(avgAngle) * NODE_RADIUS;
+  const endNodeRadius = getNodeRadius(endNode);
+  const startNodeRadius = getNodeRadius(startNode);
 
-  // 개별 화살표의 시작점 조정
-  const angle = Math.atan2(targetY - startY, targetX - startX);
-  const adjustedStartX = startX + Math.cos(angle) * NODE_RADIUS;
-  const adjustedStartY = startY + Math.sin(angle) * NODE_RADIUS;
+  const targetX = endCenter.x + Math.cos(avgAngle) * endNodeRadius;
+  const targetY = endCenter.y + Math.sin(avgAngle) * endNodeRadius;
+
+  const angle = Math.atan2(targetY - startCenter.y, targetX - startCenter.x);
+  const adjustedStartX = startCenter.x + Math.cos(angle) * startNodeRadius;
+  const adjustedStartY = startCenter.y + Math.sin(angle) * startNodeRadius;
 
   return {
     startX: adjustedStartX,
@@ -97,12 +106,8 @@ export const MapArrows = ({
             <Path
               key={arrow.id}
               d={`M ${path.startX} ${path.startY} L ${path.endX} ${path.endY}`}
-              stroke={
-                isStartNodeCompleted
-                  ? theme.arrow.completed
-                  : theme.arrow.locked
-              }
-              strokeWidth="2"
+              stroke={isStartNodeCompleted ? theme.arrow.completed : theme.arrow.locked}
+              strokeWidth={ARROW_STROKE_WIDTH}
               fill="none"
             />
           );
@@ -152,11 +157,10 @@ export const MapArrows = ({
           const startNode = nodes.find((n) => n.id === arrow.start_node_id);
           const isStartNodeCompleted = startNode?.status === "completed";
 
-          const headLength = 15;
           const dx = path.endX - path.startX;
           const dy = path.endY - path.startY;
           const length = Math.sqrt(dx * dx + dy * dy);
-          const ratio = headLength / length;
+          const ratio = ARROW_HEAD_LENGTH / length;
           const headStartX = path.endX - dx * ratio;
           const headStartY = path.endY - dy * ratio;
 
@@ -164,12 +168,8 @@ export const MapArrows = ({
             <Path
               key={`head-${arrow.id}`}
               d={`M ${headStartX} ${headStartY} L ${path.endX} ${path.endY}`}
-              stroke={
-                isStartNodeCompleted
-                  ? theme.arrow.completed
-                  : theme.arrow.locked
-              }
-              strokeWidth="2"
+              stroke={isStartNodeCompleted ? theme.arrow.completed : theme.arrow.locked}
+              strokeWidth={ARROW_STROKE_WIDTH}
               fill="none"
               markerEnd={`url(#arrow-${arrow.id})`}
             />
