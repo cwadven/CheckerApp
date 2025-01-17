@@ -32,10 +32,10 @@ const AuthNavigator = () => {
 };
 
 export const MainTabNavigator = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const renderProfileScreen = () => {
-    if (!user) {
+    if (!isAuthenticated) {
       return AuthNavigator;
     }
     return ProfileScreen;

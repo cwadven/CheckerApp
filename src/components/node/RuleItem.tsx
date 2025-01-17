@@ -1,8 +1,15 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
+import { View, Text, Pressable, StyleSheet, Animated, ViewStyle, TextStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { NodeDetail } from "../../types/node";
 import QuestionItem from "./QuestionItem";
+
+interface VariantStyle {
+  actionButton: {
+    container: ViewStyle;
+    text: TextStyle;
+  };
+}
 
 interface RuleItemProps {
   rule: NodeDetail["active_rules"][0];
@@ -17,7 +24,7 @@ interface RuleItemProps {
   onMoveToNode: (nodeId: number) => void;
   nodeId: number;
   viewingAnswerId: number | null;
-  variantStyle: any; // TODO: 정확한 타입 정의 필요
+  variantStyle: VariantStyle;
   onSubmitAnswer: (questionId: number) => void;
 }
 

@@ -13,11 +13,12 @@ import type { AuthStackScreenProps } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { DevelopingModal } from "../../components/modals/DevelopingModal";
 import { apiClient } from "../../api/client";
+import { profileService } from "../../api/services/profileService";
 
 export const LoginScreen = ({
   navigation,
 }: AuthStackScreenProps<"LoginScreen">) => {
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -30,29 +31,42 @@ export const LoginScreen = ({
     try {
       setIsLoading(true);
       setError(null);
+      
+      // 1. 로그인 API 호출
       const response = await apiClient.login({
         username: email,
         password: password,
       });
-      console.log("✅ Login successful:", response);
 
+      // 2. 토큰 저장
       await login(response.access_token, response.refresh_token);
 
+      // 3. 프로필 정보 가져오기
+      const profileResponse = await profileService.getProfile();
+      const userData = {
+        id: profileResponse.data.id,
+        nickname: profileResponse.data.nickname,
+        profile_image: profileResponse.data.profile_image
+      };
+      
+      // 4. 유저 정보 저장
+      setUser(userData);
+
+      // 5. 프로필 화면으로 이동
       navigation.reset({
         index: 0,
         routes: [
           {
             name: "Main",
-            state: {
-              routes: [{ name: "Profile" }],
-              index: 2,
-            },
-          },
-        ],
+            params: {
+              screen: "Profile"
+            }
+          }
+        ]
       });
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "로그인에 실패했습니다");
-      console.error("❌ Login failed:", err);
     } finally {
       setIsLoading(false);
     }

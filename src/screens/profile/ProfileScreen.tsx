@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,35 +7,76 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { MainTabScreenProps } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { LogoutModal } from "../../components/modals/LogoutModal";
+import { profileService } from "../../api/services/profileService";
+
+interface ProfileData {
+  id: number;
+  nickname: string;
+  profile_image: string | null;
+  subscribed_map_count: number;
+}
 
 export const ProfileScreen = ({
   navigation,
 }: MainTabScreenProps<"Profile">) => {
-  const { user, isLoading, logout } = useAuth();
+  const { logout } = useAuth();
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (isLoading || !user) {
-    return null;
-  }
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      setIsLoading(true);
+      const response = await profileService.getProfile();
+      setProfileData(response.data);
+    } catch (error: any) {
+      console.error('Profile loading error:', error);
+      if (error.status_code === 'login-required') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Auth' }],
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
     setIsLogoutModalVisible(false);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Auth' }],
+    });
   };
+
+  if (isLoading || !profileData) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4CAF50" />
+      </View>
+    );
+  }
 
   return (
     <>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <View style={styles.profileImageContainer}>
-            {user.profile_image ? (
+            {profileData.profile_image ? (
               <Image
-                source={{ uri: user.profile_image }}
+                source={{ uri: profileData.profile_image }}
                 style={styles.profileImage}
               />
             ) : (
@@ -44,19 +85,13 @@ export const ProfileScreen = ({
               </View>
             )}
           </View>
-          <Text style={styles.nickname}>{user.nickname}</Text>
-          <Text style={styles.email}>{user.email}</Text>
+          <Text style={styles.nickname}>{profileData.nickname}</Text>
         </View>
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{user.subscription_count}</Text>
+            <Text style={styles.statNumber}>{profileData.subscribed_map_count}</Text>
             <Text style={styles.statLabel}>구독중인 맵</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{user.completed_map_count}</Text>
-            <Text style={styles.statLabel}>완료한 맵</Text>
           </View>
         </View>
 
@@ -212,5 +247,10 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 16,
     fontWeight: "600",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

@@ -9,7 +9,7 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
-  MySubscription: undefined;
+  Search: undefined;
   Profile: undefined;
 };
 
@@ -23,21 +23,10 @@ export type MainTabScreenProps<T extends keyof MainTabParamList> =
   BottomTabScreenProps<MainTabParamList, T>;
 
 export type RootStackParamList = {
-  Main: undefined;
-  MapList: { categoryId: number };
-  MapDetail: { mapId: number };
-  MapGraphLoading: { mapId: number };
-  MapGraph: {
-    mapId: number;
-    graphData: {
-      meta: MapGraphMeta;
-      nodes: Node[];
-      arrows: Arrow[];
-      activeRules: ActiveRule[];
-    };
+  Auth: undefined;
+  Main: {
+    screen?: string;
   };
-  NodeDetail: { nodeId: number };
-  EditProfile: undefined;
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =
