@@ -12,11 +12,12 @@ const DEFAULT_NODE_SIZE = {
 
 interface MapNodeProps {
   node: Node;
+  layout: MapGraphMeta["layout"];
   theme: MapGraphMeta["theme"]["node"][keyof MapGraphMeta["theme"]["node"]];
   onPress: (node: Node) => void;
 }
 
-export const MapNode = ({ node, theme, onPress }: MapNodeProps) => {
+export const MapNode = ({ node, layout, theme, onPress }: MapNodeProps) => {
   const width = node.width || DEFAULT_NODE_SIZE.width;
   const height = node.height || DEFAULT_NODE_SIZE.height;
 
@@ -26,8 +27,8 @@ export const MapNode = ({ node, theme, onPress }: MapNodeProps) => {
       style={[
         styles.container,
         {
-          left: node.position_x,
-          top: node.position_y,
+          left: node.position_x - layout.min_x,
+          top: node.position_y - layout.min_y,
           width,
           height,
           backgroundColor: theme.background,

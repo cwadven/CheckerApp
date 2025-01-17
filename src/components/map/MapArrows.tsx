@@ -5,8 +5,7 @@ import type { MapGraphMeta } from "../../types/map";
 import type { Node, Arrow } from "../../types/graph";
 
 interface MapArrowsProps {
-  width: number;
-  height: number;
+  layout: MapGraphMeta["layout"];
   arrows: Arrow[];
   nodes: Node[];
   theme: MapGraphMeta["theme"];
@@ -40,7 +39,8 @@ const getNodeRadius = (node: Node) => {
 export const calculateArrowPath = (
   arrow: Arrow,
   nodes: Node[],
-  arrows: Arrow[]
+  arrows: Arrow[],
+  layout: MapGraphMeta["layout"]
 ): { startX: number; startY: number; endX: number; endY: number } | null => {
   const startNode = nodes.find((n) => n.id === arrow.start_node_id);
   const endNode = nodes.find((n) => n.id === arrow.end_node_id);
@@ -67,10 +67,10 @@ export const calculateArrowPath = (
     const startNodeRadius = getNodeRadius(startNode);
 
     return {
-      startX: startCenter.x + Math.cos(baseAngle) * startNodeRadius,
-      startY: startCenter.y + Math.sin(baseAngle) * startNodeRadius,
-      endX: endCenter.x - Math.cos(baseAngle) * endNodeRadius,
-      endY: endCenter.y - Math.sin(baseAngle) * endNodeRadius,
+      startX: (startCenter.x + Math.cos(baseAngle) * startNodeRadius) - layout.min_x,
+      startY: (startCenter.y + Math.sin(baseAngle) * startNodeRadius) - layout.min_y,
+      endX: (endCenter.x - Math.cos(baseAngle) * endNodeRadius) - layout.min_x,
+      endY: (endCenter.y - Math.sin(baseAngle) * endNodeRadius) - layout.min_y,
     };
   }
 
@@ -98,26 +98,28 @@ export const calculateArrowPath = (
   const targetY = endCenter.y - Math.sin(avgAngle) * endNodeRadius;
 
   return {
-    startX: startCenter.x + Math.cos(baseAngle) * startNodeRadius,
-    startY: startCenter.y + Math.sin(baseAngle) * startNodeRadius,
-    endX: targetX,
-    endY: targetY,
+    startX: (startCenter.x + Math.cos(baseAngle) * startNodeRadius) - layout.min_x,
+    startY: (startCenter.y + Math.sin(baseAngle) * startNodeRadius) - layout.min_y,
+    endX: targetX - layout.min_x,
+    endY: targetY - layout.min_y,
   };
 };
 
 export const MapArrows = ({
-  width,
-  height,
+  layout,
   arrows,
   nodes,
   theme,
 }: MapArrowsProps) => {
+  const width = layout.max_x - layout.min_x;
+  const height = layout.max_y - layout.min_y;
+
   return (
     <>
       <Svg width={width} height={height} style={styles.container}>
         {arrows.map((arrow) => {
           if (arrow.start_node_id === arrow.end_node_id) return null;
-          const path = calculateArrowPath(arrow, nodes, arrows);
+          const path = calculateArrowPath(arrow, nodes, arrows, layout);
           if (!path) return null;
 
           const startNode = nodes.find((n) => n.id === arrow.start_node_id);
@@ -172,7 +174,7 @@ export const MapArrows = ({
         </Defs>
         {arrows.map((arrow) => {
           if (arrow.start_node_id === arrow.end_node_id) return null;
-          const path = calculateArrowPath(arrow, nodes, arrows);
+          const path = calculateArrowPath(arrow, nodes, arrows, layout);
           if (!path) return null;
 
           const startNode = nodes.find((n) => n.id === arrow.start_node_id);

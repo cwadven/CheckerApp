@@ -44,8 +44,10 @@ export interface MapGraphMeta {
     solved_questions: number;
   };
   layout: {
-    width: number;
-    height: number;
+    min_x: number;
+    max_x: number;
+    min_y: number;
+    max_y: number;
     grid_size: number;
   };
   theme: {

@@ -12,7 +12,7 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
   const gridSize = layout.grid_size;
 
   // 가로선
-  for (let i = 0; i < layout.height; i += gridSize) {
+  for (let i = Math.floor(layout.min_y / gridSize) * gridSize; i <= layout.max_y; i += gridSize) {
     lines.push(
       <View
         key={`horizontal-${i}`}
@@ -20,7 +20,7 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
           position: "absolute",
           left: 0,
           right: 0,
-          top: i,
+          top: i - layout.min_y,
           height: 1,
           backgroundColor: theme.grid_color,
         }}
@@ -29,7 +29,7 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
   }
 
   // 세로선
-  for (let i = 0; i < layout.width; i += gridSize) {
+  for (let i = Math.floor(layout.min_x / gridSize) * gridSize; i <= layout.max_x; i += gridSize) {
     lines.push(
       <View
         key={`vertical-${i}`}
@@ -37,7 +37,7 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
           position: "absolute",
           top: 0,
           bottom: 0,
-          left: i,
+          left: i - layout.min_x,
           width: 1,
           backgroundColor: theme.grid_color,
         }}
@@ -45,7 +45,19 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
     );
   }
 
-  return <View style={styles.container}>{lines}</View>;
+  return (
+    <View 
+      style={[
+        styles.container,
+        {
+          width: layout.max_x - layout.min_x,
+          height: layout.max_y - layout.min_y,
+        }
+      ]}
+    >
+      {lines}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -53,8 +65,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
     opacity: 0.3,
   },
 });

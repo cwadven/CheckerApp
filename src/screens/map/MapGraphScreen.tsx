@@ -141,8 +141,12 @@ export const MapGraphScreen = ({
               style={[
                 styles.graphContent,
                 {
-                  width: graphData.meta.layout.width,
-                  height: graphData.meta.layout.height,
+                  width: graphData.meta.layout.max_x - graphData.meta.layout.min_x,
+                  height: graphData.meta.layout.max_y - graphData.meta.layout.min_y,
+                  transform: [
+                    { translateX: graphData.meta.layout.min_x },
+                    { translateY: graphData.meta.layout.min_y }
+                  ],
                   backgroundColor: graphData.meta.theme.background_color,
                 },
               ]}
@@ -153,8 +157,7 @@ export const MapGraphScreen = ({
               />
 
               <MapArrows
-                width={graphData.meta.layout.width}
-                height={graphData.meta.layout.height}
+                layout={graphData.meta.layout}
                 arrows={arrows}
                 nodes={nodes}
                 theme={graphData.meta.theme}
@@ -164,6 +167,7 @@ export const MapGraphScreen = ({
                 <MapNode
                   key={node.id}
                   node={node}
+                  layout={graphData.meta.layout}
                   theme={graphData.meta.theme.node[node.status]}
                   onPress={handleNodePress}
                 />
