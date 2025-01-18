@@ -47,6 +47,7 @@ export interface NodeDetail {
         files: Array<{
           id: number;
           file: string;
+          name?: string;
         }>;
       }>;
     }>;

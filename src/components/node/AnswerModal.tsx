@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { NodeDetail } from "../../types/node";
@@ -40,7 +41,28 @@ export const AnswerModal: React.FC<AnswerModalProps> = ({
           </View>
           <ScrollView style={styles.content}>
             {answers?.map((answer) => (
-              <AnswerContent key={answer.id} answer={answer} />
+              <View key={answer.id} style={styles.answerContainer}>
+                <AnswerContent answer={answer} />
+                
+                {answer.files && answer.files.length > 0 && (
+                  <View style={styles.filesSection}>
+                    <Text style={styles.filesSectionTitle}>첨부 파일</Text>
+                    {answer.files.map((file) => (
+                      <Pressable
+                        key={file.id}
+                        style={styles.fileItem}
+                        onPress={() => Linking.openURL(file.file)}
+                      >
+                        <Ionicons name="document-outline" size={20} color="#2E5AAC" />
+                        <Text style={styles.fileName} numberOfLines={1}>
+                          {file.name || file.file.split('/').pop()}
+                        </Text>
+                        <Ionicons name="open-outline" size={20} color="#666" />
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
             ))}
           </ScrollView>
         </View>
@@ -86,6 +108,36 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+  },
+  answerContainer: {
+    marginBottom: 16,
+  },
+  filesSection: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+  },
+  filesSectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  fileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  fileName: {
+    flex: 1,
+    fontSize: 14,
+    color: '#2E5AAC',
+    marginLeft: 8,
+    marginRight: 8,
   },
 });
 
