@@ -414,7 +414,10 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
       <AnswerSubmitModal
         visible={isAnswerSubmitModalVisible}
         onClose={() => setAnswerSubmitModalVisible(false)}
-        question={selectedQuestion}
+        question={{
+          ...selectedQuestion,
+          question_files: selectedQuestion?.question_files || [],
+        }}
         onSubmit={handleSubmitAnswer}
       />
     </View>

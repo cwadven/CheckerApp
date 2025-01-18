@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { answerSubmitService } from '../../api/services/answerSubmitService';
 import { AlertModal } from '../common/AlertModal';
 import type { AnswerSubmitResponse } from '../../types/answer';
+import { Ionicons } from '@expo/vector-icons';
+import { Linking } from 'react-native';
 type DocumentPickerAsset = DocumentPicker.DocumentPickerAsset;
 
 type EnhancedDocumentPickerAsset = DocumentPickerAsset & {
@@ -24,6 +27,10 @@ interface Question {
   description: string;
   answer_submit_with_text: boolean;
   answer_submit_with_file: boolean;
+  question_files?: Array<{
+    id: number;
+    file: string;
+  }>;
   my_answers?: {
     id: number;
     answer: string;
@@ -232,6 +239,25 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
               <Text style={styles.description}>
                 {question.description?.replace(/\\n/g, '\n')}
               </Text>
+
+              {question.question_files && question.question_files.length > 0 && (
+                <View style={styles.referenceSection}>
+                  <Text style={styles.sectionTitle}>참고 자료</Text>
+                  {question.question_files.map((file) => (
+                    <Pressable
+                      key={file.id}
+                      style={styles.referenceItem}
+                      onPress={() => Linking.openURL(file.file)}
+                    >
+                      <Ionicons name="document-outline" size={20} color="#2E5AAC" />
+                      <Text style={styles.referenceText} numberOfLines={1}>
+                        {file.file}
+                      </Text>
+                      <Ionicons name="open-outline" size={20} color="#666" />
+                    </Pressable>
+                  ))}
+                </View>
+              )}
 
               <ScrollView style={styles.contentContainer}>
                 {question.answer_submit_with_text && (
@@ -476,6 +502,25 @@ const styles = StyleSheet.create({
     color: '#dc3545',
     fontSize: 12,
     marginTop: 4,
+  },
+  referenceSection: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  referenceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  referenceText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#2E5AAC',
+    marginLeft: 8,
+    marginRight: 8,
   },
 });
 
