@@ -7,9 +7,9 @@ export const mockCategories: Category[] = [
     icon: "code-outline",
   },
   {
-    id: 2,
-    name: "디자인",
-    icon: "color-palette-outline",
+    id: 17,
+    name: "여행",
+    icon: "airplane-sharp",
   },
   {
     id: 3,
