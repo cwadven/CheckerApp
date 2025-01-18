@@ -3,6 +3,7 @@ import { StyleSheet } from "react-native";
 import Svg, { Path, Marker, Defs } from "react-native-svg";
 import type { MapGraphMeta } from "../../types/map";
 import type { Node, Arrow } from "../../types/graph";
+import { GRAPH_PADDING } from "../../constants/layout";
 
 interface MapArrowsProps {
   layout: MapGraphMeta["layout"];
@@ -67,10 +68,10 @@ export const calculateArrowPath = (
     const startNodeRadius = getNodeRadius(startNode);
 
     return {
-      startX: (startCenter.x + Math.cos(baseAngle) * startNodeRadius) - layout.min_x,
-      startY: (startCenter.y + Math.sin(baseAngle) * startNodeRadius) - layout.min_y,
-      endX: (endCenter.x - Math.cos(baseAngle) * endNodeRadius) - layout.min_x,
-      endY: (endCenter.y - Math.sin(baseAngle) * endNodeRadius) - layout.min_y,
+      startX: (startCenter.x + Math.cos(baseAngle) * startNodeRadius - layout.min_x) + GRAPH_PADDING,
+      startY: (startCenter.y + Math.sin(baseAngle) * startNodeRadius - layout.min_y) + GRAPH_PADDING,
+      endX: (endCenter.x - Math.cos(baseAngle) * endNodeRadius - layout.min_x) + GRAPH_PADDING,
+      endY: (endCenter.y - Math.sin(baseAngle) * endNodeRadius - layout.min_y) + GRAPH_PADDING,
     };
   }
 
@@ -98,10 +99,10 @@ export const calculateArrowPath = (
   const targetY = endCenter.y - Math.sin(avgAngle) * endNodeRadius;
 
   return {
-    startX: (startCenter.x + Math.cos(baseAngle) * startNodeRadius) - layout.min_x,
-    startY: (startCenter.y + Math.sin(baseAngle) * startNodeRadius) - layout.min_y,
-    endX: targetX - layout.min_x,
-    endY: targetY - layout.min_y,
+    startX: (startCenter.x + Math.cos(baseAngle) * startNodeRadius - layout.min_x) + GRAPH_PADDING,
+    startY: (startCenter.y + Math.sin(baseAngle) * startNodeRadius - layout.min_y) + GRAPH_PADDING,
+    endX: (targetX - layout.min_x) + GRAPH_PADDING,
+    endY: (targetY - layout.min_y) + GRAPH_PADDING,
   };
 };
 
@@ -111,8 +112,8 @@ export const MapArrows = ({
   nodes,
   theme,
 }: MapArrowsProps) => {
-  const width = layout.max_x - layout.min_x;
-  const height = layout.max_y - layout.min_y;
+  const width = layout.max_x - layout.min_x + (GRAPH_PADDING * 2);
+  const height = layout.max_y - layout.min_y + (GRAPH_PADDING * 2);
 
   return (
     <>

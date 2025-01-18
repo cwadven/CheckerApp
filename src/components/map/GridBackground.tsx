@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import type { MapGraphMeta } from "../../types/map";
+import { GRAPH_PADDING } from "../../constants/layout";
 
 interface GridBackgroundProps {
   layout: MapGraphMeta["layout"];
@@ -12,7 +13,9 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
   const gridSize = layout.grid_size;
 
   // 가로선
-  for (let i = Math.floor(layout.min_y / gridSize) * gridSize; i <= layout.max_y; i += gridSize) {
+  for (let i = Math.floor((layout.min_y - GRAPH_PADDING) / gridSize) * gridSize; 
+       i <= layout.max_y + GRAPH_PADDING; 
+       i += gridSize) {
     lines.push(
       <View
         key={`horizontal-${i}`}
@@ -20,7 +23,7 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
           position: "absolute",
           left: 0,
           right: 0,
-          top: i - layout.min_y,
+          top: i - (layout.min_y - GRAPH_PADDING),
           height: 1,
           backgroundColor: theme.grid_color,
         }}
@@ -29,7 +32,9 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
   }
 
   // 세로선
-  for (let i = Math.floor(layout.min_x / gridSize) * gridSize; i <= layout.max_x; i += gridSize) {
+  for (let i = Math.floor((layout.min_x - GRAPH_PADDING) / gridSize) * gridSize; 
+       i <= layout.max_x + GRAPH_PADDING; 
+       i += gridSize) {
     lines.push(
       <View
         key={`vertical-${i}`}
@@ -37,7 +42,7 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
           position: "absolute",
           top: 0,
           bottom: 0,
-          left: i - layout.min_x,
+          left: i - (layout.min_x - GRAPH_PADDING),
           width: 1,
           backgroundColor: theme.grid_color,
         }}
@@ -46,21 +51,40 @@ export const GridBackground = ({ layout, theme }: GridBackgroundProps) => {
   }
 
   return (
-    <View 
-      style={[
-        styles.container,
-        {
-          width: layout.max_x - layout.min_x,
-          height: layout.max_y - layout.min_y,
-        }
-      ]}
-    >
-      {lines}
-    </View>
+    <>
+      {/* 배경색 레이어 */}
+      <View 
+        style={[
+          styles.background,
+          {
+            width: layout.max_x - layout.min_x + (GRAPH_PADDING * 2),
+            height: layout.max_y - layout.min_y + (GRAPH_PADDING * 2),
+            backgroundColor: theme.background_color,
+          }
+        ]}
+      />
+      {/* 그리드 라인 레이어 */}
+      <View 
+        style={[
+          styles.container,
+          {
+            width: layout.max_x - layout.min_x + (GRAPH_PADDING * 2),
+            height: layout.max_y - layout.min_y + (GRAPH_PADDING * 2),
+          }
+        ]}
+      >
+        {lines}
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
   container: {
     position: "absolute",
     top: 0,

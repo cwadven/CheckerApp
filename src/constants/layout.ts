@@ -15,3 +15,6 @@ export const layout = {
     headLength: 15,
   },
 } as const;
+
+// 그래프 여백 상수 추가
+export const GRAPH_PADDING = 100;  // 각 방향으로 100px의 여유 공간

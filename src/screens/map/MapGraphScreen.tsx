@@ -15,6 +15,8 @@ import { NodeDetailModal } from "../../components/node/NodeDetailModal";
 import type { Node, Arrow } from "../../types/graph";
 import { nodeService } from "../../api/services/nodeService";
 import type { AnswerSubmitResponse } from '../../types/answer';
+import { DEFAULT_NODE_SIZE } from "../../components/map/MapNode";
+import { GRAPH_PADDING } from "../../constants/layout";
 
 export const MapGraphScreen = ({
   route,
@@ -94,9 +96,19 @@ export const MapGraphScreen = ({
   const moveToNode = (nodeId: number) => {
     const node = nodes.find((n: Node) => n.id === nodeId);
     if (node) {
+      const nodeWidth = node.width || DEFAULT_NODE_SIZE.width;
+      const nodeHeight = node.height || DEFAULT_NODE_SIZE.height;
+
+      // 노드의 중심점 계산 (패딩 포함)
+      const nodeCenterX = (node.position_x - graphData.meta.layout.min_x) + GRAPH_PADDING + (nodeWidth / 2);
+      const nodeCenterY = (node.position_y - graphData.meta.layout.min_y) + GRAPH_PADDING + (nodeHeight / 2);
+
+      // 화면의 상단 부분에 헤더가 있는 것을 고려하여 위치 조정
+      const verticalOffset = windowHeight * 0.4;
+
       offset.value = withSpring({
-        x: -node.position_x + windowWidth / 2 - 50,
-        y: -node.position_y + windowHeight / 2 - 40,
+        x: -nodeCenterX + (windowWidth / 2),
+        y: -nodeCenterY + verticalOffset,
       });
       savedOffset.value = offset.value;
     }
@@ -141,13 +153,8 @@ export const MapGraphScreen = ({
               style={[
                 styles.graphContent,
                 {
-                  width: graphData.meta.layout.max_x - graphData.meta.layout.min_x,
-                  height: graphData.meta.layout.max_y - graphData.meta.layout.min_y,
-                  transform: [
-                    { translateX: graphData.meta.layout.min_x },
-                    { translateY: graphData.meta.layout.min_y }
-                  ],
-                  backgroundColor: graphData.meta.theme.background_color,
+                  width: (graphData.meta.layout.max_x - graphData.meta.layout.min_x) + (GRAPH_PADDING * 2),
+                  height: (graphData.meta.layout.max_y - graphData.meta.layout.min_y) + (GRAPH_PADDING * 2),
                 },
               ]}
             >

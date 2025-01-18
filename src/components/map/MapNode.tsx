@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Node } from "../../types/graph";
 import type { MapGraphMeta } from "../../types/map";
+import { GRAPH_PADDING } from "../../constants/layout";
 
 // 노드 기본 크기 상수
-const DEFAULT_NODE_SIZE = {
+export const DEFAULT_NODE_SIZE = {
   width: 100,
   height: 100,
-};
+} as const;
 
 interface MapNodeProps {
   node: Node;
@@ -27,8 +28,8 @@ export const MapNode = ({ node, layout, theme, onPress }: MapNodeProps) => {
       style={[
         styles.container,
         {
-          left: node.position_x - layout.min_x,
-          top: node.position_y - layout.min_y,
+          left: (node.position_x - layout.min_x) + GRAPH_PADDING,
+          top: (node.position_y - layout.min_y) + GRAPH_PADDING,
           width,
           height,
           backgroundColor: theme.background,
