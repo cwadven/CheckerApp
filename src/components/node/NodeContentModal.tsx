@@ -286,7 +286,7 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   };
 
   return (
-    <>
+    <View>
       <Modal
         visible={isVisible}
         transparent
@@ -371,6 +371,13 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
                     <Text style={styles.description}>{node.description}</Text>
 
                     {/* Active Rules 목록 */}
+                    {node.active_rules.length > 0 && (
+                      <View style={styles.infoContainer}>
+                        <Text style={styles.infoText}>
+                        💡 아래 목표 하나를 완료하면 다음 단계가 열립니다.
+                      </Text>
+                    </View>
+                    )}
                     {node.active_rules.map((rule) => (
                       <RuleItem
                         key={rule.id}
@@ -410,7 +417,7 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
         question={selectedQuestion}
         onSubmit={handleSubmitAnswer}
       />
-    </>
+    </View>
   );
 };
 
@@ -622,6 +629,20 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flex: 1,
     minHeight: 0,
+  },
+  infoContainer: {
+    backgroundColor: '#F0F7FF',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E1EFFF',
+  },
+  infoText: {
+    fontSize: 13,
+    color: '#2E5AAC',
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });
 

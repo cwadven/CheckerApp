@@ -53,16 +53,12 @@ export const RuleItem: React.FC<RuleItemProps> = ({
             <View
               style={[
                 styles.progressBar,
-                variant === "completed"
-                  ? { width: "100%" }
-                  : { width: `${rule.progress.percentage}%` },
+                { width: `${rule.progress.percentage}%` },
               ]}
             />
           </View>
           <Text style={styles.progressText}>
-            {variant === "completed"
-              ? `100% 완료 (${rule.questions.length}/${rule.questions.length} 문제 해결)`
-              : `${rule.progress.percentage}% 완료 (${rule.progress.completed_questions}/${rule.progress.total_questions} 문제 해결)`}
+            {`${rule.progress.percentage}% 완료 (${rule.progress.completed_questions}/${rule.progress.total_questions} 문제 해결)`}
           </Text>
         </View>
         <Ionicons
