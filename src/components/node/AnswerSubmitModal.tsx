@@ -201,6 +201,9 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
           setAlertConfig(prev => ({ ...prev, visible: false }));
           if (response) {
             await onSubmit(response);
+            if (status === 'pending' || status === 'success') {
+              onClose();
+            }
           }
         },
         style: {
