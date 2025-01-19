@@ -210,4 +210,15 @@ const styles = StyleSheet.create({
   graphContent: {
     position: "relative",
   },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    padding: 24,
+  },
 });
