@@ -20,11 +20,21 @@ export const createMapPanResponder = ({
   lastDistance,
   setIsPanning,
 }: CreatePanResponderProps) => {
+  let initialFocalPoint = { x: 0, y: 0 };
+  let lastFocalPoint = { x: 0, y: 0 };
+
   const calculateDistance = (touch1: TouchPoint, touch2: TouchPoint): number => {
     return Math.sqrt(
       Math.pow(touch2.pageX - touch1.pageX, 2) +
       Math.pow(touch2.pageY - touch1.pageY, 2)
     );
+  };
+
+  const calculateFocalPoint = (touch1: TouchPoint, touch2: TouchPoint) => {
+    return {
+      x: (touch1.pageX + touch2.pageX) / 2,
+      y: (touch1.pageY + touch2.pageY) / 2,
+    };
   };
 
   return PanResponder.create({
@@ -42,8 +52,15 @@ export const createMapPanResponder = ({
       return isDragging || isPinching;
     },
 
-    onPanResponderGrant: () => {
+    onPanResponderGrant: (evt) => {
       setIsPanning(true);
+      const touches = evt.nativeEvent.touches;
+      
+      if (touches.length === 2) {
+        initialFocalPoint = calculateFocalPoint(touches[0], touches[1]);
+        lastFocalPoint = { ...initialFocalPoint };
+      }
+
       pan.setOffset({
         x: pan.x._value,
         y: pan.y._value,
@@ -51,22 +68,35 @@ export const createMapPanResponder = ({
       pan.setValue({ x: 0, y: 0 });
     },
 
-    onPanResponderMove: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+    onPanResponderMove: (evt, gestureState) => {
       const touches = evt.nativeEvent.touches;
       
-      // 두 손가락으로 터치했을 때 (핀치 줌)
       if (touches.length === 2) {
+        const currentFocalPoint = calculateFocalPoint(touches[0], touches[1]);
         const distance = calculateDistance(touches[0], touches[1]);
 
         if (lastDistance.current === 0) {
           lastDistance.current = distance;
+          lastFocalPoint = currentFocalPoint;
+          return;
         }
 
         const newScale = lastScale.current * (distance / lastDistance.current);
-        scale.setValue(Math.min(Math.max(newScale, 0.5), 3));
-      } 
-      // 한 손가락으로 터치했을 때 (패닝)
-      else {
+        const constrainedScale = Math.min(Math.max(newScale, 0.5), 3);
+        
+        scale.setValue(constrainedScale);
+
+        // 핀치 줌의 중심점 이동 계산
+        const focalDeltaX = currentFocalPoint.x - lastFocalPoint.x;
+        const focalDeltaY = currentFocalPoint.y - lastFocalPoint.y;
+
+        pan.setValue({
+          x: focalDeltaX + gestureState.dx,
+          y: focalDeltaY + gestureState.dy,
+        });
+
+        lastFocalPoint = currentFocalPoint;
+      } else {
         pan.setValue({
           x: gestureState.dx,
           y: gestureState.dy,
