@@ -10,7 +10,7 @@ interface MapHeaderProps {
 
 export const MapHeader = ({ mapMeta, onBack }: MapHeaderProps) => {
   return (
-    <View style={styles.container}>
+    <View style={styles.header}>
       <View style={styles.titleRow}>
         <Pressable onPress={onBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
@@ -46,16 +46,21 @@ export const MapHeader = ({ mapMeta, onBack }: MapHeaderProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  header: {
+    flexDirection: "column",
     padding: 16,
     backgroundColor: "white",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+    zIndex: 10,
+    elevation: 3,
+    position: 'relative',
   },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
+    width: '100%',
   },
   backButton: {
     padding: 8,

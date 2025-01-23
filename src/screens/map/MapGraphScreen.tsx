@@ -131,17 +131,25 @@ export const MapGraphScreen = ({
     <SafeAreaView style={styles.container}>
       <MapHeader mapMeta={graphData.meta} onBack={() => navigation.goBack()} />
 
-      <View style={styles.graphWrapper}>
+      <View 
+        style={styles.graphWrapper}
+        {...panResponder.panHandlers}
+      >
         <Animated.View
-          {...panResponder.panHandlers}
           style={[styles.graphContainer, animatedStyle]}
         >
           <View
             style={[
               styles.graphContent,
               {
-                width: (graphData.meta.layout.max_x - graphData.meta.layout.min_x) + (GRAPH_PADDING * 2),
-                height: (graphData.meta.layout.max_y - graphData.meta.layout.min_y) + (GRAPH_PADDING * 2),
+                width: Math.max(
+                  windowWidth,
+                  (graphData.meta.layout.max_x - graphData.meta.layout.min_x) + (GRAPH_PADDING * 2)
+                ),
+                height: Math.max(
+                  windowHeight,
+                  (graphData.meta.layout.max_y - graphData.meta.layout.min_y) + (GRAPH_PADDING * 2)
+                ),
               },
             ]}
           >
@@ -188,13 +196,22 @@ const styles = StyleSheet.create({
   },
   graphWrapper: {
     flex: 1,
-    overflow: "hidden",
+    width: "100%",
+    height: "100%",
+    position: "relative",
+    zIndex: 1,  // 그래프 영역의 z-index 설정
   },
   graphContainer: {
-    flex: 1,
+    position: "absolute",
+    left: 0,
+    top: 0,
+    width: "100%",
+    height: "100%",
   },
   graphContent: {
     position: "relative",
+    minWidth: "100%",
+    minHeight: "100%",
   },
   centerContainer: {
     flex: 1,
