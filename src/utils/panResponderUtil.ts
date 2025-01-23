@@ -28,8 +28,19 @@ export const createMapPanResponder = ({
   };
 
   return PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponder: () => false,
+    onStartShouldSetPanResponderCapture: () => false,
+    
+    onMoveShouldSetPanResponder: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+      const isDragging = Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
+      const isPinching = evt.nativeEvent.touches.length === 2;
+      return isDragging || isPinching;
+    },
+    onMoveShouldSetPanResponderCapture: (evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+      const isDragging = Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
+      const isPinching = evt.nativeEvent.touches.length === 2;
+      return isDragging || isPinching;
+    },
 
     onPanResponderGrant: () => {
       setIsPanning(true);

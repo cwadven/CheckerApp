@@ -98,16 +98,26 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
+    zIndex: 1000,
   },
   modalContainer: {
-    width: "90%",
-    maxHeight: "80%",
+    width: "100%",
     backgroundColor: "white",
     borderRadius: 12,
     overflow: "hidden",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    zIndex: 1001,
   },
   lockedModalContainer: {
-    maxHeight: 300,
+    minHeight: 300,
   },
   header: {
     flexDirection: "row",
@@ -153,6 +163,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
     gap: 16,
+    backgroundColor: "white",
   },
   lockedContentWithBackground: {
     marginTop: 100,
