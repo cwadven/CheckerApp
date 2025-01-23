@@ -3,10 +3,10 @@ const ENV = {
     API_URL: "http://localhost:8000",
   },
   staging: {
-    API_URL: "https://dev-api.checker.com",
+    API_URL: "https://dev.qosmo.co.kr",
   },
   prod: {
-    API_URL: "https://api.checker.com",
+    API_URL: "https://qosmo.co.kr",
   },
 };
 
