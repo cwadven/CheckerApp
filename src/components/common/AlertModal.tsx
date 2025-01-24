@@ -35,72 +35,58 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   style,
 }) => {
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onCancel}
-      statusBarTranslucent
-    >
-      <View 
-        style={[
-          styles.container, 
-          style,
-          { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }
-        ]}
-      >
-        <TouchableOpacity 
-          style={styles.content} 
-          activeOpacity={1} 
-          onPress={e => e.stopPropagation()}
-        >
-          {style?.icon && (
-            <Text style={[styles.icon, { color: style.titleColor }]}>
-              {style.icon}
-            </Text>
-          )}
-          <Text style={[styles.title, style?.titleColor && { color: style.titleColor }]}>
-            {title}
+    <View style={styles.container}>
+      <View style={styles.modalContent}>
+        {style?.icon && (
+          <Text style={[styles.icon, { color: style.titleColor }]}>
+            {style.icon}
           </Text>
-          <Text style={styles.message}>{message}</Text>
-          <View style={styles.buttonContainer}>
-            {showCancel && (
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
-                onPress={onCancel}
-              >
-                <Text style={[styles.buttonText, styles.cancelButtonText]}>
-                  {cancelText}
-                </Text>
-              </TouchableOpacity>
-            )}
+        )}
+        <Text style={[styles.title, style?.titleColor && { color: style.titleColor }]}>
+          {title}
+        </Text>
+        <Text style={styles.message}>{message}</Text>
+        <View style={styles.buttonContainer}>
+          {showCancel && (
             <TouchableOpacity
-              style={[styles.button, styles.confirmButton]}
-              onPress={onConfirm}
+              style={[styles.button, styles.cancelButton]}
+              onPress={onCancel}
             >
-              <Text style={styles.buttonText}>{confirmText}</Text>
+              <Text style={[styles.buttonText, styles.cancelButtonText]}>
+                {cancelText}
+              </Text>
             </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={[styles.button, styles.confirmButton]}
+            onPress={onConfirm}
+          >
+            <Text style={styles.buttonText}>{confirmText}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999999,
-    elevation: 999999,
-  },
-  content: {
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 20,
-    width: '80%',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    position: 'relative',
+    zIndex: 3000,
+    pointerEvents: 'auto',
+  },
+  modalContent: {
     alignItems: 'center',
   },
   title: {

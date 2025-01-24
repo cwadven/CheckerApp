@@ -235,9 +235,17 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
   return (
     <>
       {question && (
-        <Modal visible={visible} animationType="fade" transparent>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+        <Modal 
+          visible={visible} 
+          animationType="fade" 
+          transparent
+          statusBarTranslucent
+        >
+          <View style={[
+            StyleSheet.absoluteFill,
+            styles.overlay,
+          ]}>
+            <View style={styles.modalContainer}>
               <Text style={styles.title}>{question.title}</Text>
               <Text style={styles.description}>
                 {question.description?.replace(/\\n/g, '\n')}
@@ -360,24 +368,19 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
         statusBarTranslucent
         onRequestClose={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
       >
-        <View style={[
-          StyleSheet.absoluteFill,
-          {
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 9999,
-            elevation: 9999,
-          }
-        ]}>
-          <AlertModal
-            visible={alertConfig.visible}
-            title={alertConfig.title}
-            message={alertConfig.message}
-            onConfirm={alertConfig.onConfirm}
-            style={{
-              titleColor: alertConfig.style.titleColor,
-              icon: alertConfig.style.icon,
-            }}
-          />
+        <View style={styles.alertOverlay}>
+          <View style={styles.alertContainer}>
+            <AlertModal
+              visible={alertConfig.visible}
+              title={alertConfig.title}
+              message={alertConfig.message}
+              onConfirm={alertConfig.onConfirm}
+              style={{
+                titleColor: alertConfig.style.titleColor,
+                icon: alertConfig.style.icon,
+              }}
+            />
+          </View>
         </View>
       </Modal>
     </>
@@ -385,18 +388,28 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
+  overlay: {
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000,
   },
-  modalContent: {
+  modalContainer: {
     backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
+    borderRadius: 12,
+    padding: 24,
     width: '90%',
+    maxWidth: 400,
     maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 1001,
   },
   title: {
     fontSize: 18,
@@ -524,6 +537,22 @@ const styles = StyleSheet.create({
     color: '#2E5AAC',
     marginLeft: 8,
     marginRight: 8,
+  },
+  alertOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'box-none',
+  },
+  alertContainer: {
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: 'transparent',
+    position: 'relative',
+    zIndex: 3000,
+    elevation: 8,
+    pointerEvents: 'box-none',
   },
 });
 
