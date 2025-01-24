@@ -110,24 +110,32 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
     files: false,
   });
 
+  // 초기 상태를 저장할 state 추가
+  const [initialAnswer, setInitialAnswer] = useState('');
+  const [initialFiles, setInitialFiles] = useState<EnhancedDocumentPickerAsset[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // 데이터가 로드되었을 때 초기 상태 저장
   useEffect(() => {
-    if (!visible) {
-      setAnswer('');
-      setFiles([]);
-    } else if (question?.my_answers && question.my_answers.length > 0) {
+    if (visible && question?.my_answers) {
       const latestAnswer = question.my_answers[0];
-      setAnswer(latestAnswer.answer || '');
-      
-      if (latestAnswer.files) {
-        const existingFiles: EnhancedDocumentPickerAsset[] = latestAnswer.files.map(file => ({
-          uri: file.url,
-          name: file.name,
-          mimeType: 'application/octet-stream',
-          size: 0,
-          isExisting: true,
-        }));
-        setFiles(existingFiles);
-      }
+      const currentAnswer = latestAnswer?.answer || '';
+      const currentFiles = latestAnswer?.files 
+        ? latestAnswer.files.map(file => ({
+            uri: file.url,
+            name: file.name,
+            mimeType: 'application/octet-stream',
+            size: 0,
+            isExisting: true,
+          }))
+        : [];
+      setAnswer(currentAnswer);
+      setFiles(currentFiles);
+      setInitialAnswer(currentAnswer);
+      setInitialFiles(currentFiles);
+      setIsLoaded(true);
+    } else if (!visible) {
+      setIsLoaded(false);
     }
   }, [visible, question?.my_answers]);
 
@@ -146,6 +154,29 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!question || !isLoaded) return;
+
+    // 변경사항 체크
+    const hasChanges = 
+      answer !== initialAnswer || 
+      files.length !== initialFiles.length;
+
+    if (!hasChanges) {
+      setAlertConfig({
+        visible: true,
+        title: '알림',
+        message: '변경된 내용이 없습니다.',
+        style: {
+          titleColor: '#666',
+          icon: '⚠️',
+        },
+        onConfirm: () => {
+          setAlertConfig(prev => ({ ...prev, visible: false }));
+        },
+      });
+      return;
+    }
+
     let response: AnswerSubmitResponse | undefined;
     try {
       setIsSubmitting(true);
