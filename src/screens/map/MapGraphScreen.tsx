@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { View, StyleSheet, SafeAreaView, Dimensions, Platform, PanResponder, Animated } from "react-native";
+import { View, StyleSheet, SafeAreaView, Dimensions, Platform, PanResponder, Animated, Modal } from "react-native";
 import type { RootStackScreenProps } from "../../types/navigation";
 import { GridBackground } from "../../components/map/GridBackground";
 import { MapArrows } from "../../components/map/MapArrows";
@@ -12,6 +12,8 @@ import type { AnswerSubmitResponse } from '../../types/answer';
 import { DEFAULT_NODE_SIZE } from "../../components/map/MapNode";
 import { GRAPH_PADDING } from "../../constants/layout";
 import { createMapPanResponder } from '../../utils/panResponderUtil';
+import { AlertModal } from "../../components/common/AlertModal";
+import type { ApiError } from "../../types/apiError";
 
 export const MapGraphScreen = ({
   route,
@@ -28,6 +30,18 @@ export const MapGraphScreen = ({
   const scale = useRef(new Animated.Value(1)).current;
   const lastScale = useRef(1);
   const lastDistance = useRef(0);
+
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   // graphData 유효성 검사
   if (
@@ -102,28 +116,60 @@ export const MapGraphScreen = ({
     }
   };
 
-  const handleAnswerSubmit = (response: AnswerSubmitResponse) => {
-    if (response.data.status === 'success') {
-      setNodes(prevNodes => 
-        prevNodes.map(node => {
-          if (response.data.completed_node_ids.includes(node.id)) {
-            return { ...node, status: 'completed' };
-          }
-          if (response.data.going_to_in_progress_node_ids.includes(node.id)) {
-            return { ...node, status: 'in_progress' };
-          }
-          return node;
-        })
-      );
+  const handleTokenExpired = () => {
+    setAlertConfig({
+      visible: true,
+      title: '세션 만료',
+      message: '로그인이 만료되었습니다. 다시 로그인해주세요.',
+      onConfirm: () => {
+        setAlertConfig(prev => ({ ...prev, visible: false }));
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      },
+    });
+  };
 
-      setArrows((prevArrows: Arrow[]) => 
-        prevArrows.map(arrow => ({
-          ...arrow,
-          status: response.data.completed_arrow_ids.includes(arrow.id) 
-            ? 'completed' 
-            : arrow.status
-        }))
-      );
+  const handleAnswerSubmit = async (response: AnswerSubmitResponse) => {
+    try {
+      if (response.data.status === 'success') {
+        setNodes(prevNodes => 
+          prevNodes.map(node => {
+            if (response.data.completed_node_ids.includes(node.id)) {
+              return { ...node, status: 'completed' };
+            }
+            if (response.data.going_to_in_progress_node_ids.includes(node.id)) {
+              return { ...node, status: 'in_progress' };
+            }
+            return node;
+          })
+        );
+
+        setArrows(prevArrows => 
+          prevArrows.map(arrow => ({
+            ...arrow,
+            status: response.data.completed_arrow_ids.includes(arrow.id) 
+              ? 'completed' 
+              : arrow.status
+          }))
+        );
+      }
+    } catch (error) {
+      if ((error as ApiError).status === 401) {
+        handleTokenExpired();
+      } else {
+        console.error('Failed to update nodes and arrows:', error);
+      }
+    }
+  };
+
+  const handleNodeDetailError = (error: unknown) => {
+    if ((error as ApiError).status === 401) {
+      handleTokenExpired();
+    } else {
+      setSelectedNodeId(null);  // 에러 발생 시 모달 닫기
+      console.error('Failed to fetch node details:', error);
     }
   };
 
@@ -184,7 +230,26 @@ export const MapGraphScreen = ({
         nodeId={selectedNodeId}
         onMoveToNode={moveToNode}
         onAnswerSubmit={handleAnswerSubmit}
+        onError={handleNodeDetailError}
       />
+
+      <Modal 
+        visible={alertConfig.visible} 
+        transparent 
+        animationType="fade"
+        statusBarTranslucent
+      >
+        <View style={styles.alertOverlay}>
+          <View style={styles.alertContainer}>
+            <AlertModal
+              visible={alertConfig.visible}
+              title={alertConfig.title}
+              message={alertConfig.message}
+              onConfirm={alertConfig.onConfirm}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -223,5 +288,16 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
     padding: 24,
+  },
+  alertOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  alertContainer: {
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: 'transparent',
   },
 });

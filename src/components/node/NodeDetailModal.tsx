@@ -7,52 +7,54 @@ import type { AnswerSubmitResponse } from '../../types/answer';
 
 interface NodeDetailModalProps {
   visible: boolean;
-  onClose: () => void;
   nodeId: number | null;
-  onMoveToNode?: (nodeId: number) => void;
+  onClose: () => void;
+  onMoveToNode: (nodeId: number) => void;
   onAnswerSubmit: (response: AnswerSubmitResponse) => void;
+  onError: (error: unknown) => void;
 }
 
 export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
   visible,
-  onClose,
   nodeId,
+  onClose,
   onMoveToNode,
   onAnswerSubmit,
+  onError,
 }) => {
   const [node, setNode] = useState<NodeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchNodeDetail = async () => {
-      if (!nodeId) return;
+      if (nodeId === null) return;
 
       try {
         setIsLoading(true);
         const response = await nodeService.getNodeDetail(nodeId);
         setNode(response.data);
       } catch (error) {
-        console.error("Failed to fetch node detail:", error);
+        onError(error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (visible && nodeId) {
+    if (visible && nodeId !== null) {
       fetchNodeDetail();
     } else {
       setNode(null);
     }
-  }, [nodeId, visible]);
+  }, [visible, nodeId, onError]);
 
   const handleMoveToNode = async (targetNodeId: number) => {
     try {
       setIsLoading(true);
-      onMoveToNode?.(targetNodeId);
+      onMoveToNode(targetNodeId);
       const response = await nodeService.getNodeDetail(targetNodeId);
       setNode(response.data);
     } catch (error) {
-      console.error("Failed to fetch node detail:", error);
+      onError(error);
     } finally {
       setIsLoading(false);
     }
@@ -64,11 +66,11 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
       const response = await nodeService.getNodeDetail(targetNodeId);
       setNode(response.data);
     } catch (error) {
-      console.error("Failed to refresh node detail:", error);
+      onError(error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [onError]);
 
   if (!node) return null;
 
