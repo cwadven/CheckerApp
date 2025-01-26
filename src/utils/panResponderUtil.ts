@@ -61,6 +61,7 @@ export const createMapPanResponder = ({
         lastFocalPoint = { ...initialFocalPoint };
       }
 
+      // 현재 위치를 오프셋으로 저장
       pan.setOffset({
         x: pan.x._value,
         y: pan.y._value,
@@ -81,25 +82,25 @@ export const createMapPanResponder = ({
           return;
         }
 
-        const newScale = lastScale.current * (distance / lastDistance.current);
-        const constrainedScale = Math.min(Math.max(newScale, 0.5), 3);
+        const scaleFactor = distance / lastDistance.current;
+        const newScale = Math.min(Math.max(scale._value * scaleFactor, 0.5), 3);
         
-        scale.setValue(constrainedScale);
+        const pinchDeltaX = currentFocalPoint.x - lastFocalPoint.x;
+        const pinchDeltaY = currentFocalPoint.y - lastFocalPoint.y;
 
-        // 핀치 줌의 중심점 이동 계산
-        const focalDeltaX = currentFocalPoint.x - lastFocalPoint.x;
-        const focalDeltaY = currentFocalPoint.y - lastFocalPoint.y;
-
+        scale.setValue(newScale);
         pan.setValue({
-          x: focalDeltaX + gestureState.dx,
-          y: focalDeltaY + gestureState.dy,
+          x: pinchDeltaX / newScale,
+          y: pinchDeltaY / newScale
         });
 
         lastFocalPoint = currentFocalPoint;
+        lastDistance.current = distance;
       } else {
+        // 드래그 시 현재 위치에서의 상대적 이동
         pan.setValue({
-          x: gestureState.dx,
-          y: gestureState.dy,
+          x: gestureState.dx / scale._value,
+          y: gestureState.dy / scale._value
         });
       }
     },

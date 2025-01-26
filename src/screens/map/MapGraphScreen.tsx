@@ -179,26 +179,26 @@ export const MapGraphScreen = ({
 
       <View 
         style={styles.graphWrapper}
-        {...panResponder.panHandlers}
+        {...panResponder.panHandlers}  // 전체 영역으로 이동
       >
         <Animated.View
-          style={[styles.graphContainer, animatedStyle]}
+          style={[
+            styles.graphContainer,
+            {
+              transform: [
+                { scale },
+                { translateX: pan.x },
+                { translateY: pan.y },
+              ],
+            },
+          ]}
         >
-          <View
-            style={[
-              styles.graphContent,
-              {
-                width: Math.max(
-                  windowWidth,
-                  (graphData.meta.layout.max_x - graphData.meta.layout.min_x) + (GRAPH_PADDING * 2)
-                ),
-                height: Math.max(
-                  windowHeight,
-                  (graphData.meta.layout.max_y - graphData.meta.layout.min_y) + (GRAPH_PADDING * 2)
-                ),
-              },
-            ]}
-          >
+          <View style={[styles.graphContent, {
+            width: Math.max(windowWidth * 2, 
+              (graphData.meta.layout.max_x - graphData.meta.layout.min_x) + (GRAPH_PADDING * 2)),
+            height: Math.max(windowHeight * 2,
+              (graphData.meta.layout.max_y - graphData.meta.layout.min_y) + (GRAPH_PADDING * 2)),
+          }]}>
             <GridBackground
               layout={graphData.meta.layout}
               theme={graphData.meta.theme}
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     position: "relative",
-    zIndex: 1,  // 그래프 영역의 z-index 설정
+    zIndex: 1,
   },
   graphContainer: {
     position: "absolute",
