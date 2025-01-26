@@ -88,6 +88,9 @@ const VARIANT_STYLES: Record<"completed" | "in_progress", VariantStyles> = {
   },
 };
 
+const BACKGROUND_IMAGE_HEIGHT = 160;
+const CONTENT_PADDING = 16;
+
 export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   isVisible,
   onClose,
@@ -329,11 +332,16 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
               <View style={styles.scrollContainer}>
                 <ScrollView
                   ref={scrollViewRef}
-                  style={styles.content}
-                  contentContainerStyle={[
-                    styles.contentContainer,
-                    node.background_image ? styles.contentWithBackground : null
+                  style={[
+                    styles.content,
+                    node.background_image ? {
+                      backgroundColor: 'white',
+                      borderTopLeftRadius: 20,
+                      borderTopRightRadius: 20,
+                      marginTop: BACKGROUND_IMAGE_HEIGHT - 20,
+                    } : null
                   ]}
+                  contentContainerStyle={styles.contentContainer}
                 >
                   <View style={styles.section}>
                     <View style={styles.statusSection}>
@@ -486,9 +494,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 100,
   },
-  contentWithBackground: {
-    marginTop: 100,
-  },
   section: {
     paddingBottom: 32,
   },
@@ -631,7 +636,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    minHeight: 0,
   },
   infoContainer: {
     backgroundColor: '#F0F7FF',
