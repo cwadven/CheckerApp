@@ -1,5 +1,6 @@
 import config from "../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { eventEmitter, AUTH_EVENTS } from '../utils/eventEmitter';
 
 interface ApiResponse<T> {
   status_code: string;
@@ -17,7 +18,10 @@ interface RequestOptions extends RequestInit {
   headers?: Record<string, string>;
 }
 
-interface TokenResponse {
+interface TokenResponse extends Pick<ApiResponse<{
+  access_token: string;
+  refresh_token: string;
+}>, 'status_code'> {
   access_token: string;
   refresh_token: string;
 }
@@ -83,9 +87,20 @@ class ApiClient {
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
+      const data: TokenResponse = await response.json();
+      if (data.status_code === 'invalid-refresh-token' || data.status_code === 'no-member-token') {
+        await AsyncStorage.removeItem('access_token');
+        await AsyncStorage.removeItem('refresh_token');
+        await AsyncStorage.removeItem('is_member');
+        eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, '다시 로그인이 필요합니다.');
+        throw new ApiError(401, '다시 로그인이 필요합니다.');
+      }
       if (!response.ok) throw new Error('Token refresh failed');
 
-      return response.json();
+      await AsyncStorage.setItem('access_token', data.access_token);
+      await AsyncStorage.setItem('refresh_token', data.refresh_token);
+      await AsyncStorage.setItem('is_member', 'true');
+      return data;
     } catch (error) {
       throw error;
     }
@@ -124,7 +139,9 @@ class ApiClient {
 
           return retryData;
         } catch (refreshError) {
-          throw new ApiError(401, 'Session expired');
+          // 토큰 갱신 실패 시 로그인 화면으로 이동
+          eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, '다시 로그인 해주세요.');
+          throw new ApiError(401, '다시 로그인이 필요합니다.');
         }
       }
       throw error;

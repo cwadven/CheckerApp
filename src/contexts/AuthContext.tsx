@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -11,6 +12,7 @@ interface AuthContextType {
     profile_image?: string | null;
   } | null;
   setUser: (user: AuthContextType['user']) => void;
+  redirectToLogin: (message: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -23,6 +25,7 @@ interface LoginResponse {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<AuthContextType['user']>(null);
+  const navigation = useNavigation();
 
   const login = async (tokens: LoginResponse) => {
     try {
@@ -50,8 +53,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const redirectToLogin = async (message: string) => {
+    await logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ 
+        name: 'Auth',
+        params: { 
+          screen: 'LoginScreen',
+          params: { message } 
+        }
+      }],
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user, setUser }}>
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      login, 
+      logout, 
+      user, 
+      setUser,
+      redirectToLogin 
+    }}>
       {children}
     </AuthContext.Provider>
   );
