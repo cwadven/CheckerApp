@@ -28,7 +28,7 @@ const ARROW_STYLES = {
   android: {
     headLength: 18,  // iOS보다 약간 작게
     strokeWidth: 2,
-    markerSize: 7    // iOS보다 약간 작게
+    markerSize: 15    // iOS보다 약간 작게
   },
   web: {
     headLength: 15,
