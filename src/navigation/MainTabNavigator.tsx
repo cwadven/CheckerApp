@@ -100,6 +100,7 @@ export const MainStackNavigator = () => {
         component={MapListScreen}
         options={{
           headerShown: true,
+          headerTitle: "",
           headerBackTitle: "뒤로",
         }}
       />

@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 import Svg, { Path, Marker, Defs } from "react-native-svg";
 import type { MapGraphMeta } from "../../types/map";
 import type { Node, Arrow } from "../../types/graph";
@@ -18,9 +18,36 @@ const DEFAULT_NODE_SIZE = {
   height: 100,
 };
 
+// 플랫폼별 화살표 스타일 상수
+const ARROW_STYLES = {
+  ios: {
+    headLength: 20,
+    strokeWidth: 3,
+    markerSize: 8
+  },
+  android: {
+    headLength: 18,  // iOS보다 약간 작게
+    strokeWidth: 2,
+    markerSize: 7    // iOS보다 약간 작게
+  },
+  web: {
+    headLength: 15,
+    strokeWidth: 2,
+    markerSize: 6
+  }
+};
+
+// 현재 플랫폼에 따른 스타일 선택
+const currentStyle = Platform.select({
+  ios: ARROW_STYLES.ios,
+  android: ARROW_STYLES.android,
+  web: ARROW_STYLES.web,
+  default: ARROW_STYLES.web
+});
+
 // 화살표 관련 상수
-const ARROW_HEAD_LENGTH = 15;
-const ARROW_STROKE_WIDTH = 2;
+const ARROW_HEAD_LENGTH = currentStyle.headLength;
+const ARROW_STROKE_WIDTH = currentStyle.strokeWidth;
 
 const getNodeCenter = (node: Node) => {
   const width = node.width || DEFAULT_NODE_SIZE.width;
@@ -157,8 +184,8 @@ export const MapArrows = ({
                 viewBox="0 0 10 10"
                 refX="9"
                 refY="5"
-                markerWidth="6"
-                markerHeight="6"
+                markerWidth={currentStyle.markerSize}
+                markerHeight={currentStyle.markerSize}
                 orient="auto"
               >
                 <Path
