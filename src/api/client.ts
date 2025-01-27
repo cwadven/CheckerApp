@@ -8,15 +8,6 @@ interface ApiResponse<T> {
   errors?: Record<string, string[]>;
 }
 
-interface GuestTokenResponse {
-  access_token: string;
-}
-
-interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-}
-
 interface LoginCredentials {
   username: string;
   password: string;
@@ -26,101 +17,149 @@ interface RequestOptions extends RequestInit {
   headers?: Record<string, string>;
 }
 
+interface TokenResponse {
+  access_token: string;
+  refresh_token: string;
+}
+
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 class ApiClient {
   private baseUrl: string;
-  private guestToken: string | null = null;
+  private refreshPromise: Promise<TokenResponse> | null = null;
 
   constructor() {
     this.baseUrl = config.API_URL;
   }
 
-  private async getGuestToken(): Promise<string> {
+  private async getOrSetAccessToken(): Promise<{access_token: string, refresh_token: string, is_member: boolean} | null> {
     try {
-      // 1. 저장된 토큰 확인
-      const savedToken = await AsyncStorage.getItem("guest_token");
-      if (savedToken) {
-        this.guestToken = savedToken;
-        return savedToken;
-      }
+      // 저장된 access_token 확인
+      const access_token = await AsyncStorage.getItem('access_token');
+      const refresh_token = await AsyncStorage.getItem('refresh_token');
+      const is_member = await AsyncStorage.getItem('is_member') === 'true';
+      if (access_token) return {access_token: access_token, refresh_token: refresh_token || '', is_member};
 
-      // 2. 토큰이 없으면 새로 요청
-      console.log("🔄 Requesting new guest token");
+      // access_token이 없으면 게스트 토큰 요청
       const response = await fetch(`${this.baseUrl}/v1/member/guest-token`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
-      const data = await response.json();
-      console.log("📥 Guest token response:", data);
+      const data: TokenResponse = await response.json();
 
       if (!response.ok) {
-        throw new Error("Failed to get guest token");
+        console.error('Guest token response:', data);
+        throw new Error('Failed to get guest token');
       }
 
-      // 3. 새 토큰 저장
-      const newToken = data.access_token;
-      await AsyncStorage.setItem("guest_token", newToken);
-      this.guestToken = newToken;
-      return newToken;
+      await AsyncStorage.setItem('access_token', data.access_token);
+      await AsyncStorage.setItem('refresh_token', data.refresh_token);
+      await AsyncStorage.setItem('is_member', 'false');
+      return {access_token: data.access_token, refresh_token: data.refresh_token, is_member: false};
     } catch (error) {
-      console.error("❌ Error getting guest token:", error);
+      console.error('Error getting access token:', error);
+      return null;
+    }
+  }
+
+  private async refreshToken(): Promise<TokenResponse> {
+    try {
+      const refreshToken = await AsyncStorage.getItem('refresh_token');
+      if (!refreshToken) throw new Error('No refresh token');
+
+      const response = await fetch(`${this.baseUrl}/v1/member/refresh-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (!response.ok) throw new Error('Token refresh failed');
+
+      return response.json();
+    } catch (error) {
       throw error;
     }
   }
 
   private async request<T>(
+    method: string,
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     try {
-      // 1. 토큰 확인/요청
-      const token = await this.getGuestToken();
-
-      // 2. API 요청
-      const url = `${this.baseUrl}${endpoint}`;
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `jwt ${token}`,
-        ...options.headers,
-      };
-
-      console.log(`🚀 API Request: ${url}`, { headers, ...options });
-
-      const response = await fetch(url, { ...options, headers });
+      const response = await this.fetchWithAuth(method, endpoint, options);
       const data = await response.json();
 
-      console.log(`📥 API Response: ${url}`, data);
-
-      // 3. 토큰 만료 체크
-      if (
-        data.status_code === "guest-token-issue" ||
-        data.status_code === "authentication_failed"
-      ) {
-        console.log("🔄 Token expired, refreshing...");
-        // 토큰 삭제 후 재요청
-        await AsyncStorage.removeItem("guest_token");
-        this.guestToken = null;
-        return this.request(endpoint, options);
-      }
-
       if (!response.ok) {
-        throw new Error(data.message || "API 요청 실패");
+        throw new ApiError(response.status, data.message || 'API request failed');
       }
 
       return data;
     } catch (error) {
-      console.error(`❌ API Error: ${endpoint}`, error);
+      if (error instanceof ApiError && error.status === 401) {
+        try {
+          if (!this.refreshPromise) {
+            this.refreshPromise = this.refreshToken();
+          }
+          await this.refreshPromise;
+          this.refreshPromise = null;
+          
+          // 토큰 갱신 후 원래 요청 재시도
+          const retryResponse = await this.fetchWithAuth(method, endpoint, options);
+          const retryData = await retryResponse.json();
+          
+          if (!retryResponse.ok) {
+            throw new ApiError(retryResponse.status, retryData.message || 'API request failed');
+          }
+
+          return retryData;
+        } catch (refreshError) {
+          throw new ApiError(401, 'Session expired');
+        }
+      }
       throw error;
     }
   }
 
-  async get<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: "GET" });
+  private async fetchWithAuth(
+    method: string,
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<Response> {
+    let tokenInfo = await this.getOrSetAccessToken();
+    const headers = new Headers(options.headers);
+    
+    // 토큰이 없으면 한 번만 재시도
+    if (!tokenInfo) {
+      tokenInfo = await this.getOrSetAccessToken();
+    }
+
+    if (tokenInfo) {
+      headers.set('Authorization', `jwt ${tokenInfo.access_token}`);
+    }
+
+    return fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
+      method,
+      headers,
+    });
   }
 
-  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+  async get<T>(endpoint: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+    return this.request<T>("GET", endpoint, { ...options, method: "GET" });
+  }
+
+  async login(credentials: LoginCredentials): Promise<TokenResponse> {
     try {
       const url = `${this.baseUrl}/v1/member/login`;
       const response = await fetch(url, {
@@ -137,46 +176,23 @@ class ApiClient {
         throw new Error(data.message || "로그인에 실패했습니다");
       }
 
-      // 로그인 성공 시 새로운 토큰 저장
-      await AsyncStorage.setItem("guest_token", data.access_token);
-      await AsyncStorage.setItem("refresh_token", data.refresh_token);
-      this.guestToken = data.access_token;
-
       return data;
     } catch (error) {
-      console.error("❌ Login failed:", error);
+      console.error("로그인 실패:", error);
       throw error;
     }
   }
 
-  async post<T>(endpoint: string, body: any, options: RequestOptions = {}): Promise<T> {
-    try {
-      const token = await this.getGuestToken();
-      
-      const headers = {
-        'Accept': 'application/json',
-        ...(token && { 'Authorization': `jwt ${token}` }),
+  async post<T>(endpoint: string, data?: any, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+    return this.request<T>("POST", endpoint, {
+      ...options,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+      headers: {
+        'Content-Type': 'application/json',
         ...options.headers,
-      };
-
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        ...options,
-        method: 'POST',
-        body: body instanceof FormData ? body : JSON.stringify(body),
-        headers,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw data;
-      }
-
-      return data;
-    } catch (error) {
-      console.error(`❌ API Error: ${endpoint}`, error);
-      throw error;
-    }
+      },
+    });
   }
 }
 

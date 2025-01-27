@@ -39,7 +39,10 @@ export const LoginScreen = ({
       });
 
       // 2. 토큰 저장
-      await login(response.access_token, response.refresh_token);
+      await login({ 
+        access_token: response.access_token, 
+        refresh_token: response.refresh_token 
+      });
 
       // 3. 프로필 정보 가져오기
       const profileResponse = await profileService.getProfile();

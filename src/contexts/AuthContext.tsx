@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (accessToken: string, refreshToken: string) => Promise<void>;
+  login: (tokens: { access_token: string; refresh_token: string }) => Promise<void>;
   logout: () => Promise<void>;
   user: {
     id?: number;
@@ -15,22 +15,39 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+}
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<AuthContextType['user']>(null);
 
-  const login = async (accessToken: string, refreshToken: string) => {
-    await AsyncStorage.setItem("guest_token", accessToken);
-    await AsyncStorage.setItem("refresh_token", refreshToken);
-    setUser({});
-    setIsAuthenticated(true);
+  const login = async (tokens: LoginResponse) => {
+    try {
+      await AsyncStorage.setItem('access_token', tokens.access_token);
+      await AsyncStorage.setItem('refresh_token', tokens.refresh_token);
+      await AsyncStorage.setItem('is_member', 'true');
+      setUser({});
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Failed to save tokens:', error);
+      throw error;
+    }
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("guest_token");
-    await AsyncStorage.removeItem("refresh_token");
-    setUser(null);
-    setIsAuthenticated(false);
+    try {
+      await AsyncStorage.removeItem('access_token');
+      await AsyncStorage.removeItem('refresh_token');
+      await AsyncStorage.removeItem('is_member');
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Failed to remove tokens:', error);
+      throw error;
+    }
   };
 
   return (

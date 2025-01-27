@@ -1,18 +1,17 @@
 import { apiClient } from "../client";
 
+interface Profile {
+  id: number;
+  nickname: string;
+  profile_image: string | null;
+}
+
 interface ProfileResponse {
-  profile_image: any;
-  status_code: string;
-  data: {
-    id: number;
-    nickname: string;
-    profile_image: string | null;
-    subscribed_map_count: number;
-  };
+  data: Profile;
 }
 
 export const profileService = {
-  getProfile: () => {
-    return apiClient.get<ProfileResponse>('/v1/member/profile');
-  },
+  async getProfile(): Promise<ApiResponse<Profile>> {
+    return apiClient.get<Profile>('/v1/member/profile');
+  }
 }; 
