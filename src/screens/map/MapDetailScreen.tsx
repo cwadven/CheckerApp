@@ -8,12 +8,16 @@ import {
   ActivityIndicator,
   Pressable,
   SafeAreaView,
+  Modal,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import type { RootStackScreenProps } from "../../types/navigation";
 import { mapService } from "../../api/services/mapService";
 import type { Map } from "../../types/map";
+import { apiClient } from "../../api/client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AlertModal } from "../../components/common/AlertModal";
 
 type RouteProps = RootStackScreenProps<"MapDetail">;
 
@@ -25,6 +29,22 @@ export const MapDetailScreen = () => {
   const [map, setMap] = useState<Map | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    onCancel?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    showCancel?: boolean;
+  }>({
+    visible: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
 
   const loadMapDetail = async () => {
     try {
@@ -44,15 +64,55 @@ export const MapDetailScreen = () => {
     }
   };
 
+  const handleSubscribe = async () => {
+    try {
+      setIsSubscribing(true);
+      const response = await apiClient.post<{ status_code: string }>(`/v1/subscription/map/${mapId}`);
+      
+      if (response.status_code === 'success') {
+        setMap(prevMap => 
+          prevMap ? { ...prevMap, is_subscribed: true } : null
+        );
+        
+        setAlertConfig({
+          visible: true,
+          title: "구독 완료",
+          message: "구독이 완료되었습니다. 지금 바로 시작해보세요!",
+          confirmText: "시작하기",
+          cancelText: "나중에",
+          showCancel: true,
+          onConfirm: () => {
+            setAlertConfig(prev => ({ ...prev, visible: false }));
+            handleStartMap();
+          },
+          onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+        });
+      }
+    } catch (error) {
+      setAlertConfig({
+        visible: true,
+        title: "구독 실패",
+        message: "잠시 후 다시 시도해주세요.",
+        confirmText: "확인",
+        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+      });
+      console.error('Failed to subscribe:', error);
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
   useEffect(() => {
     loadMapDetail();
   }, [mapId]);
 
   const handleStartMap = () => {
+    if (!map) return;
     navigation.navigate("MapGraphLoading", { mapId: map.id });
   };
 
   const handlePreviewMap = () => {
+    if (!map) return;
     navigation.navigate("MapGraphLoading", { mapId: map.id });
   };
 
@@ -154,12 +214,21 @@ export const MapDetailScreen = () => {
           ) : (
             <View style={styles.buttonRow}>
               <Pressable
-                style={[styles.button, styles.subscribeButton]}
-                onPress={() => {
-                  console.log("Subscribe");
-                }}
+                style={[
+                  styles.button, 
+                  styles.subscribeButton,
+                  isSubscribing && styles.subscribingButton
+                ]}
+                onPress={handleSubscribe}
+                disabled={map?.is_subscribed || isSubscribing}
               >
-                <Text style={styles.subscribeButtonText}>구독하기</Text>
+                {isSubscribing ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={styles.subscribeButtonText}>
+                    {map?.is_subscribed ? '구독중' : '구독하기'}
+                  </Text>
+                )}
               </Pressable>
               <Pressable
                 style={[styles.button, styles.previewButton]}
@@ -171,6 +240,27 @@ export const MapDetailScreen = () => {
           )}
         </View>
       </View>
+      <Modal
+        visible={alertConfig.visible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+      >
+        <View style={styles.alertOverlay}>
+          <View style={styles.alertContainer}>
+            <AlertModal
+              visible={alertConfig.visible}
+              title={alertConfig.title}
+              message={alertConfig.message}
+              onConfirm={alertConfig.onConfirm}
+              onCancel={alertConfig.onCancel}
+              confirmText={alertConfig.confirmText}
+              cancelText={alertConfig.cancelText}
+              showCancel={alertConfig.showCancel}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -329,5 +419,19 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 200,
     marginBottom: 16,
+  },
+  subscribingButton: {
+    opacity: 0.8,
+  },
+  alertOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  alertContainer: {
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: 'transparent',
   },
 });
