@@ -13,13 +13,14 @@ export interface Map {
   };
   created_at: string;
   progress?: {
+    percentage: number;
     completed_node_count: number;
     total_node_count: number;
-    percentage: number;
-    recent_activated_nodes: Array<{
+    recent_activated_nodes: {
       id: number;
       name: string;
-    }>;
+      activated_at: string;
+    }[];
   };
 }
 

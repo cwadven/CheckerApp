@@ -202,9 +202,32 @@ export const MapDetailScreen = () => {
                   />
                 </View>
                 <Text style={styles.progressText}>
-                  {map.progress.completed_node_count} /{" "}
-                  {map.progress.total_node_count} 완료
+                  {map.progress.completed_node_count} / {map.progress.total_node_count} 완료
                 </Text>
+
+                {map.progress.recent_activated_nodes?.length > 0 && (
+                  <>
+                    <Text style={[styles.sectionTitle, { marginTop: 24 }]}>최근 해결한 문제</Text>
+                    <View style={styles.recentNodesList}>
+                      {map.progress.recent_activated_nodes.slice(0, 3).map((node) => (
+                        <View key={node.id} style={styles.recentNode}>
+                          <Text style={styles.recentNodeTitle} numberOfLines={1}>
+                            {node.name}
+                          </Text>
+                          <Text style={styles.recentNodeDate}>
+                            {new Date(node.activated_at).toLocaleString('ko-KR', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: 'numeric',
+                              hour12: true
+                            })}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
               </View>
             )}
           </View>
@@ -437,5 +460,23 @@ const styles = StyleSheet.create({
     width: '90%',
     maxWidth: 400,
     backgroundColor: 'transparent',
+  },
+  recentNodesList: {
+    marginTop: 8,
+    gap: 12,
+  },
+  recentNode: {
+    padding: 12,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  recentNodeTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  recentNodeDate: {
+    fontSize: 12,
+    color: '#666',
   },
 });
