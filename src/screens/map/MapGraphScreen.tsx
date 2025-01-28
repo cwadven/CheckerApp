@@ -13,7 +13,8 @@ import { DEFAULT_NODE_SIZE } from "../../components/map/MapNode";
 import { GRAPH_PADDING } from "../../constants/layout";
 import { createMapPanResponder } from '../../utils/panResponderUtil';
 import { AlertModal } from "../../components/common/AlertModal";
-import type { ApiError } from "../../types/apiError";
+import { ApiError } from "api/client";
+
 
 export const MapGraphScreen = ({
   route,

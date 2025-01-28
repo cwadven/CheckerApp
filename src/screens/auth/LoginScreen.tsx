@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { DevelopingModal } from "../../components/modals/DevelopingModal";
 import { apiClient } from "../../api/client";
 import { profileService } from "../../api/services/profileService";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const LoginScreen = ({
   navigation,
@@ -26,6 +27,32 @@ export const LoginScreen = ({
     useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const [isMember, accessToken, refreshToken] = await Promise.all([
+          AsyncStorage.getItem('is_member'),
+          AsyncStorage.getItem('access_token'),
+          AsyncStorage.getItem('refresh_token')
+        ]);
+
+        if (isMember === 'true' && accessToken && refreshToken) {
+          // 토큰 설정
+          await login({ access_token: accessToken, refresh_token: refreshToken });
+          
+          // 프로필 화면으로 이동
+          navigation.replace('Main', { screen: 'Profile' });
+        }
+      } catch (error) {
+        console.error('Failed to check login status:', error);
+        // 에러 발생 시 토큰 초기화
+        await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'is_member']);
+      }
+    };
+
+    checkLoginStatus();
+  }, [navigation, login]);
 
   const handleLogin = async () => {
     try {
@@ -55,7 +82,7 @@ export const LoginScreen = ({
       // 4. 유저 정보 저장
       setUser(userData);
 
-      // 5. 프로필 화면으로 이동
+      // 5. Profile 화면으로 이동
       navigation.reset({
         index: 0,
         routes: [
