@@ -18,6 +18,7 @@ import type { Map } from "../../types/map";
 import { apiClient } from "../../api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AlertModal } from "../../components/common/AlertModal";
+import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 
 type RouteProps = RootStackScreenProps<"MapDetail">;
 
@@ -73,6 +74,9 @@ export const MapDetailScreen = () => {
         setMap(prevMap => 
           prevMap ? { ...prevMap, is_subscribed: true } : null
         );
+        
+        // 구독 상태 변경 이벤트 발생
+        eventEmitter.emit(MAP_EVENTS.SUBSCRIPTION_UPDATED, { mapId, isSubscribed: true });
         
         setAlertConfig({
           visible: true,

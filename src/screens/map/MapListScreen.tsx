@@ -12,6 +12,7 @@ import { SearchBar } from "../../components/common/SearchBar";
 import type { Map, MapListResponse } from "../../types/map";
 import { mapService } from "../../api/services/mapService";
 import type { RootStackScreenProps } from "../../types/navigation";
+import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 
 interface RouteParams {
   categoryId?: number;
@@ -84,6 +85,22 @@ export const MapListScreen = () => {
   useEffect(() => {
     loadMaps({});
   }, [categoryId]);
+
+  useEffect(() => {
+    const handleSubscriptionUpdate = ({ mapId, isSubscribed }: { mapId: number; isSubscribed: boolean }) => {
+      setMaps(prevMaps => 
+        prevMaps.map(map => 
+          map.id === mapId ? { ...map, is_subscribed: isSubscribed } : map
+        )
+      );
+    };
+
+    eventEmitter.on(MAP_EVENTS.SUBSCRIPTION_UPDATED, handleSubscriptionUpdate);
+    
+    return () => {
+      eventEmitter.off(MAP_EVENTS.SUBSCRIPTION_UPDATED, handleSubscriptionUpdate);
+    };
+  }, []);
 
   const renderFooter = () => {
     if (!isLoadingMore) return null;

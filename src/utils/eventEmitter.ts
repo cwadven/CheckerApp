@@ -25,4 +25,8 @@ export const eventEmitter = new EventEmitter();
 
 export const AUTH_EVENTS = {
   REQUIRE_LOGIN: 'auth:requireLogin'
+};
+
+export const MAP_EVENTS = {
+  SUBSCRIPTION_UPDATED: 'map:subscriptionUpdated'
 }; 
