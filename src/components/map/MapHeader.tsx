@@ -36,7 +36,7 @@ export const MapHeader = ({ mapMeta, onBack }: MapHeaderProps) => {
           />
           {mapMeta.stats.learning_period && (
             <Text style={styles.statText}>
-              {mapMeta.stats.learning_period.days}일째 학습중
+              {mapMeta.stats.learning_period.days}일째 진행중
             </Text>
           )}
         </View>
