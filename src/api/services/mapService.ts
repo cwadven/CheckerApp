@@ -1,6 +1,7 @@
 import { apiClient } from "../client";
 import type { Map, MapListResponse } from "../../types/map";
 
+
 export const mapService = {
   getMapList: async (params?: {
     categoryId?: number;
@@ -29,5 +30,26 @@ export const mapService = {
     return apiClient.get<Map>(`/v1/map/${mapId}`);
   },
 
-  // 필요한 경우 다른 Map 관련 API 메서드 추가
+  getSubscribedMaps: async (params?: {
+    categoryId?: number;
+    next_cursor?: string;
+    search?: string;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.categoryId) {
+      searchParams.append("category_id", params.categoryId.toString());
+    }
+    if (params?.next_cursor) {
+      searchParams.append("next_cursor", params.next_cursor);
+    }
+    if (params?.search) {
+      searchParams.append("search", params.search);
+    }
+
+    const endpoint = `/v1/map/subscribed${
+      searchParams.toString() ? `?${searchParams.toString()}` : ""
+    }`;
+    console.log("🔍 API Request:", endpoint);
+    return apiClient.get<MapListResponse>(endpoint);
+  },
 };

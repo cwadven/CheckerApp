@@ -26,7 +26,7 @@ export interface Map {
 
 export interface MapListResponse {
   maps: Map[];
-  next_cursor: string;
+  next_cursor: string | null;
   has_more: boolean;
 }
 
