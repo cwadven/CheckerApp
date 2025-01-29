@@ -9,9 +9,11 @@ export const answerSubmitService = {
     answer: string | null,
     files: DocumentPickerAsset[] | null
   ): Promise<AnswerSubmitResponse> => {
+    console.log('Submitting answer:', { questionId, answer, files });
+
     const formData = new FormData();
-    
-    if (answer !== null) {
+
+    if (answer !== null && answer.trim() !== '') {
       formData.append('answer', answer);
     }
     
@@ -34,6 +36,13 @@ export const answerSubmitService = {
         });
       }
     }
+
+    // FormData 내용 확인
+    const formDataObject: Record<string, any> = {};
+    formData.forEach((value, key) => {
+      formDataObject[key] = value;
+    });
+    console.log('FormData contents:', formDataObject);
 
     return apiClient.post<AnswerSubmitResponse>(
       `/v1/question/${questionId}/answer/submit`,

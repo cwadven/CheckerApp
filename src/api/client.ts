@@ -14,8 +14,11 @@ interface LoginCredentials {
   password: string;
 }
 
-interface RequestOptions extends RequestInit {
+interface RequestOptions {
+  method?: string;
   headers?: Record<string, string>;
+  body?: any;
+  rawBody?: boolean;
 }
 
 interface TokenResponse extends Pick<ApiResponse<{
@@ -47,7 +50,7 @@ class ApiClient {
       const access_token = await AsyncStorage.getItem('access_token');
       const refresh_token = await AsyncStorage.getItem('refresh_token');
       const is_member = await AsyncStorage.getItem('is_member') === 'true';
-      if (access_token) return {access_token: access_token, refresh_token: refresh_token || '', is_member};
+      if (access_token) return {access_token, refresh_token: refresh_token || '', is_member};
 
       // access_token이 없으면 게스트 토큰 요청
       const response = await fetch(`${this.baseUrl}/v1/member/guest-token`, {
@@ -109,7 +112,7 @@ class ApiClient {
   private async request<T>(
     method: string,
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestOptions = {}
   ): Promise<ApiResponse<T>> {
     try {
       const response = await this.fetchWithAuth(method, endpoint, options);
@@ -139,7 +142,6 @@ class ApiClient {
 
           return retryData;
         } catch (refreshError) {
-          // 토큰 갱신 실패 시 로그인 화면으로 이동
           eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, '다시 로그인 해주세요.');
           throw new ApiError(401, '다시 로그인이 필요합니다.');
         }
@@ -151,24 +153,29 @@ class ApiClient {
   private async fetchWithAuth(
     method: string,
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestOptions = {}
   ): Promise<Response> {
-    let tokenInfo = await this.getOrSetAccessToken();
-    const headers = new Headers(options.headers);
+    const url = `${this.baseUrl}${endpoint}`;
+    const tokenInfo = await this.getOrSetAccessToken();
     
-    // 토큰이 없으면 한 번만 재시도
-    if (!tokenInfo) {
-      tokenInfo = await this.getOrSetAccessToken();
+    // 헤더 초기화
+    const headers: HeadersInit = { ...options.headers };
+
+    // 액세스 토큰이 있으면 Authorization 헤더 추가
+    if (tokenInfo?.access_token) {
+      headers.Authorization = `jwt ${tokenInfo.access_token}`;
     }
 
-    if (tokenInfo) {
-      headers.set('Authorization', `jwt ${tokenInfo.access_token}`);
+    // FormData가 아닌 경우에만 Content-Type 설정
+    if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
     }
 
-    return fetch(`${this.baseUrl}${endpoint}`, {
+    return fetch(url, {
       ...options,
       method,
       headers,
+      credentials: 'include',
     });
   }
 
@@ -201,14 +208,22 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: any, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+    // FormData는 그대로 전송, 나머지는 JSON 문자열로 변환
+    const body = data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined);
+    
+    // FormData인 경우 Content-Type 헤더를 제거
+    const headers = data instanceof FormData 
+      ? { ...options.headers }
+      : { 
+          'Content-Type': 'application/json',
+          ...options.headers 
+        };
+
     return this.request<T>("POST", endpoint, {
       ...options,
       method: "POST",
-      body: data ? JSON.stringify(data) : undefined,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      body,
+      headers,
     });
   }
 }
