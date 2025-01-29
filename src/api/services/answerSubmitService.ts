@@ -37,13 +37,6 @@ export const answerSubmitService = {
       }
     }
 
-    // FormData 내용 확인
-    const formDataObject: Record<string, any> = {};
-    formData.forEach((value, key) => {
-      formDataObject[key] = value;
-    });
-    console.log('FormData contents:', formDataObject);
-
     return apiClient.post<AnswerSubmitResponse>(
       `/v1/question/${questionId}/answer/submit`,
       formData,
