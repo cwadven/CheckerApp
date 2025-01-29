@@ -142,8 +142,8 @@ class ApiClient {
 
           return retryData;
         } catch (refreshError) {
-          eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, '다시 로그인 해주세요.');
-          throw new ApiError(401, '다시 로그인이 필요합니다.');
+          eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, '로그인 해주세요.');
+          throw new ApiError(401, '로그인이 필요합니다.');
         }
       }
       throw error;

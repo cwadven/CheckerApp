@@ -19,6 +19,8 @@ import { apiClient } from "../../api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AlertModal } from "../../components/common/AlertModal";
 import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
+import { AUTH_EVENTS } from "../../utils/eventEmitter";
+import { ApiError } from "../../api/client";
 
 type RouteProps = RootStackScreenProps<"MapDetail">;
 
@@ -68,8 +70,12 @@ export const MapDetailScreen = () => {
   const handleSubscribe = async () => {
     try {
       setIsSubscribing(true);
-      const response = await apiClient.post<{ status_code: string }>(`/v1/subscription/map/${mapId}`);
-      
+      const response = await apiClient.post<{
+        status_code: string;
+        message?: string;
+        errors?: { detail: string };
+      }>(`/v1/subscription/map/${mapId}`);
+
       if (response.status_code === 'success') {
         setMap(prevMap => 
           prevMap ? { ...prevMap, is_subscribed: true } : null
@@ -91,16 +97,29 @@ export const MapDetailScreen = () => {
           },
           onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
         });
+      } else if (response.status_code === 'login-required') {
+        setAlertConfig({
+          visible: true,
+          title: "로그인 필요",
+          message: response.message || "로그인이 필요합니다",
+          confirmText: "로그인",
+          onConfirm: () => {
+            eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, response.message);
+            setAlertConfig(prev => ({ ...prev, visible: false }));
+          }
+        });
       }
     } catch (error) {
-      setAlertConfig({
-        visible: true,
-        title: "구독 실패",
-        message: "잠시 후 다시 시도해주세요.",
-        confirmText: "확인",
-        onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
-      });
-      console.error('Failed to subscribe:', error);
+      if (error instanceof ApiError) {
+        const apiError = error as ApiError;
+        setAlertConfig({
+          visible: true,
+          title: "구독 실패",
+          message: apiError.message || "구독 처리 중 오류가 발생했습니다",
+          confirmText: "확인",
+          onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
+        });
+      }
     } finally {
       setIsSubscribing(false);
     }
