@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { View, StyleSheet, FlatList, ActivityIndicator, Text } from "react-native";
 import { MapCard } from "../../components/map/MapCard";
 import { mapService } from "../../api/services/mapService";
@@ -16,7 +16,7 @@ export const MySubscriptionScreen = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadMaps = async (params: {
+  const loadMaps = useCallback(async (params: {
     categoryId?: number;
     next_cursor?: string;
     search?: string;
@@ -48,7 +48,7 @@ export const MySubscriptionScreen = () => {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  };
+  }, []);
 
   const handleLoadMore = () => {
     if (!isLoadingMore && !isLoading && hasMore && nextCursor) {
@@ -58,7 +58,7 @@ export const MySubscriptionScreen = () => {
 
   useEffect(() => {
     loadMaps();
-  }, []);
+  }, [loadMaps]);
 
   useEffect(() => {
     const handleSubscriptionUpdate = ({
@@ -70,24 +70,18 @@ export const MySubscriptionScreen = () => {
       isSubscribed: boolean;
       subscriberCount: number;
     }) => {
-      setMaps(prevMaps => 
-        prevMaps.map(map => 
-          map.id === mapId
-            ? {
-                ...map,
-                is_subscribed: isSubscribed,
-                subscriber_count: subscriberCount
-              }
-            : map
-        )
-      );
+      if (isSubscribed) {
+        loadMaps({ reset: true });
+      } else {
+        setMaps(prevMaps => prevMaps.filter(map => map.id !== mapId));
+      }
     };
 
     eventEmitter.on(MAP_EVENTS.SUBSCRIPTION_UPDATED, handleSubscriptionUpdate);
     return () => {
       eventEmitter.off(MAP_EVENTS.SUBSCRIPTION_UPDATED, handleSubscriptionUpdate);
     };
-  }, []);
+  }, [loadMaps]);
 
   const handleMapPress = (mapId: number) => {
     navigation.navigate("MapDetail", { mapId });

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import type { MainTabScreenProps } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { LogoutModal } from "../../components/modals/LogoutModal";
 import { profileService } from "../../api/services/profileService";
+import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 
 interface ProfileData {
   id: number;
@@ -32,9 +33,29 @@ export const ProfileScreen = ({
 
   useEffect(() => {
     loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    const handleSubscriptionUpdate = ({
+      isSubscribed
+    }: {
+      mapId: number;
+      isSubscribed: boolean;
+      subscriberCount: number;
+    }) => {
+      setProfileData(prev => prev ? {
+        ...prev,
+        subscribed_map_count: prev.subscribed_map_count + (isSubscribed ? 1 : -1)
+      } : null);
+    };
+
+    eventEmitter.on(MAP_EVENTS.SUBSCRIPTION_UPDATED, handleSubscriptionUpdate);
+    return () => {
+      eventEmitter.off(MAP_EVENTS.SUBSCRIPTION_UPDATED, handleSubscriptionUpdate);
+    };
   }, []);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await profileService.getProfile();
@@ -50,7 +71,7 @@ export const ProfileScreen = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [navigation]);
 
   const handleLogout = () => {
     logout();
