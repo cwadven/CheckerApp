@@ -70,19 +70,23 @@ export const MapDetailScreen = () => {
   const handleSubscribe = async () => {
     try {
       setIsSubscribing(true);
-      const response = await apiClient.post<{
-        status_code: string;
-        message?: string;
-        errors?: { detail: string };
-      }>(`/v1/subscription/map/${mapId}`);
+      const response = await apiClient.post<{ status_code: string }>(
+        `/v1/subscription/map/${mapId}`
+      );
 
       if (response.status_code === 'success') {
-        setMap(prevMap => 
-          prevMap ? { ...prevMap, is_subscribed: true } : null
-        );
+        setMap(prev => prev ? {
+          ...prev,
+          is_subscribed: true,
+          subscriber_count: prev.subscriber_count + 1
+        } : null);
         
-        // 구독 상태 변경 이벤트 발생
-        eventEmitter.emit(MAP_EVENTS.SUBSCRIPTION_UPDATED, { mapId, isSubscribed: true });
+        // 다른 화면에 구독 상태 변경 알림
+        eventEmitter.emit(MAP_EVENTS.SUBSCRIPTION_UPDATED, {
+          mapId,
+          isSubscribed: true,
+          subscriberCount: map?.subscriber_count ? map.subscriber_count + 1 : 1
+        });
         
         setAlertConfig({
           visible: true,
@@ -120,6 +124,31 @@ export const MapDetailScreen = () => {
           onConfirm: () => setAlertConfig(prev => ({ ...prev, visible: false }))
         });
       }
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    try {
+      setIsSubscribing(true);
+      const response = await apiClient.delete(`/v1/subscription/map/${mapId}`);
+
+      if (response.status_code === 'success') {
+        setMap(prev => prev ? {
+          ...prev,
+          is_subscribed: false,
+          subscriber_count: prev.subscriber_count - 1
+        } : null);
+        
+        eventEmitter.emit(MAP_EVENTS.SUBSCRIPTION_UPDATED, {
+          mapId,
+          isSubscribed: false,
+          subscriberCount: map?.subscriber_count ? map.subscriber_count - 1 : 0
+        });
+      }
+    } catch (error) {
+      // ... 에러 처리 ...
     } finally {
       setIsSubscribing(false);
     }

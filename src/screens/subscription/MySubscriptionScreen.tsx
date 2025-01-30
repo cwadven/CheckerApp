@@ -61,10 +61,24 @@ export const MySubscriptionScreen = () => {
   }, []);
 
   useEffect(() => {
-    const handleSubscriptionUpdate = ({ mapId, isSubscribed }: { mapId: number; isSubscribed: boolean }) => {
+    const handleSubscriptionUpdate = ({
+      mapId,
+      isSubscribed,
+      subscriberCount
+    }: {
+      mapId: number;
+      isSubscribed: boolean;
+      subscriberCount: number;
+    }) => {
       setMaps(prevMaps => 
         prevMaps.map(map => 
-          map.id === mapId ? { ...map, is_subscribed: isSubscribed } : map
+          map.id === mapId
+            ? {
+                ...map,
+                is_subscribed: isSubscribed,
+                subscriber_count: subscriberCount
+              }
+            : map
         )
       );
     };
