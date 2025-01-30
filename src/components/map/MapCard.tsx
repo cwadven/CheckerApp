@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Map } from "../../types/map";
-const defaultBackground = require('../../../assets/qosmo_background.webp');
 
 interface MapCardProps {
   map: Map;
@@ -23,11 +22,6 @@ export const MapCard = ({ map, onPress }: MapCardProps) => {
 
   return (
     <Pressable style={styles.container} onPress={onPress}>
-      <Image
-        source={map.background_image ? { uri: map.background_image } : defaultBackground}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      />
       <View style={styles.iconContainer}>
         <Image
           source={{ uri: map.icon_image }}
@@ -137,13 +131,5 @@ const styles = StyleSheet.create({
     color: "#4CAF50",
     fontSize: 12,
     fontWeight: "500",
-  },
-  backgroundImage: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    borderRadius: 12,
   },
 });
