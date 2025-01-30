@@ -39,38 +39,52 @@ export class ApiError extends Error {
 class ApiClient {
   private baseUrl: string;
   private refreshPromise: Promise<TokenResponse> | null = null;
+  private guestTokenPromise: Promise<{ access_token: string; refresh_token: string; is_member: boolean }> | null = null;
 
   constructor() {
     this.baseUrl = config.API_URL;
   }
 
-  private async getOrSetAccessToken(): Promise<{access_token: string, refresh_token: string, is_member: boolean} | null> {
+  private async getOrSetAccessToken(): Promise<{ access_token: string; refresh_token: string; is_member: boolean } | null> {
     try {
       // 저장된 access_token 확인
       const access_token = await AsyncStorage.getItem('access_token');
       const refresh_token = await AsyncStorage.getItem('refresh_token');
       const is_member = await AsyncStorage.getItem('is_member') === 'true';
-      if (access_token) return {access_token, refresh_token: refresh_token || '', is_member};
+      if (access_token) return { access_token, refresh_token: refresh_token || '', is_member };
 
-      // access_token이 없으면 게스트 토큰 요청
-      const response = await fetch(`${this.baseUrl}/v1/member/guest-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data: TokenResponse = await response.json();
-
-      if (!response.ok) {
-        console.error('Guest token response:', data);
-        throw new Error('Failed to get guest token');
+      // 게스트 토큰 요청이 진행 중이면 해당 Promise 반환
+      if (this.guestTokenPromise) {
+        return this.guestTokenPromise;
       }
 
-      await AsyncStorage.setItem('access_token', data.access_token);
-      await AsyncStorage.setItem('refresh_token', data.refresh_token);
-      await AsyncStorage.setItem('is_member', 'false');
-      return {access_token: data.access_token, refresh_token: data.refresh_token, is_member: false};
+      // 새로운 게스트 토큰 요청
+      this.guestTokenPromise = (async () => {
+        try {
+          const response = await fetch(`${this.baseUrl}/v1/member/guest-token`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          const data: TokenResponse = await response.json();
+
+          if (!response.ok) {
+            console.error('Guest token response:', data);
+            throw new Error('Failed to get guest token');
+          }
+
+          await AsyncStorage.setItem('access_token', data.access_token);
+          await AsyncStorage.setItem('refresh_token', data.refresh_token);
+          await AsyncStorage.setItem('is_member', 'false');
+          return { access_token: data.access_token, refresh_token: data.refresh_token, is_member: false };
+        } finally {
+          this.guestTokenPromise = null;
+        }
+      })();
+
+      return this.guestTokenPromise;
     } catch (error) {
       console.error('Error getting access token:', error);
       return null;
