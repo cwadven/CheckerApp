@@ -10,6 +10,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import type { RootStackScreenProps } from "../../types/navigation";
 import type { Map } from "../../types/map";
+const defaultBackground = require('../../../assets/qosmo_background.webp');
 
 interface MapCarouselProps {
   title: string;
@@ -20,6 +21,24 @@ interface MapCarouselProps {
 const formatNumber = (num: number) => {
   return num.toLocaleString();
 };
+
+const MapCard = ({ map }: { map: Map }) => (
+  <Pressable style={styles.card}>
+    <Image
+      source={map.background_image ? { uri: map.background_image } : defaultBackground}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    />
+    <View style={styles.cardContent}>
+      <Text style={styles.cardTitle} numberOfLines={2}>
+        {map.name}
+      </Text>
+      <Text style={styles.cardStats}>
+        {formatNumber(map.subscriber_count)}명 구독중
+      </Text>
+    </View>
+  </Pressable>
+);
 
 export const MapCarousel = ({ title, subtitle, maps }: MapCarouselProps) => {
   const navigation =
@@ -44,7 +63,11 @@ export const MapCarousel = ({ title, subtitle, maps }: MapCarouselProps) => {
             style={styles.card}
             onPress={() => navigation.navigate("MapDetail", { mapId: map.id })}
           >
-            <Image source={{ uri: map.icon }} style={styles.cardImage} />
+            <Image
+              source={map.background_image ? { uri: map.background_image } : defaultBackground}
+              style={styles.backgroundImage}
+              resizeMode="cover"
+            />
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle} numberOfLines={2}>
                 {map.name}
@@ -95,7 +118,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
-  cardImage: {
+  backgroundImage: {
     width: "100%",
     height: 120,
     backgroundColor: "#f5f5f5",

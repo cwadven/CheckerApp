@@ -1,5 +1,6 @@
 import { apiClient } from "../client";
 import type { Map, MapListResponse } from "../../types/map";
+import type { ApiResponse } from "../client";
 
 
 export const mapService = {
@@ -51,5 +52,13 @@ export const mapService = {
     }`;
     console.log("🔍 API Request:", endpoint);
     return apiClient.get<MapListResponse>(endpoint);
+  },
+
+  getPopularDailyMaps: () => {
+    return apiClient.get<MapListResponse>('/v1/map/popular/daily');
+  },
+
+  getPopularMonthlyMaps: () => {
+    return apiClient.get<MapListResponse>('/v1/map/popular/monthly');
   },
 };
