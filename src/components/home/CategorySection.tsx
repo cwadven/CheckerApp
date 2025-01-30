@@ -1,83 +1,94 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { apiClient } from '../../api/client';
-import type { Category } from '../../types/category';
-import type { RootStackScreenProps } from '../../types/navigation';
+import React, { useCallback } from "react";
+import { View, Text, StyleSheet, FlatList, Pressable, Image } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { Category } from "../../types/category";
+import type { RootStackScreenProps } from "../../types/navigation";
 
-export const CategorySection = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const navigation = useNavigation<RootStackScreenProps<'MapList'>['navigation']>();
+const ITEM_WIDTH = 80;
+const ITEM_SPACING = 16;
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await apiClient.get<{ data: Category[] }>('/v1/common/home_map_category/type');
-        setCategories(response.data);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+const CategoryItem = React.memo(({ category, onPress }: {
+  category: Category;
+  onPress: (categoryId: number) => void;
+}) => (
+  <Pressable
+    style={styles.categoryItem}
+    onPress={() => onPress(category.id)}
+  >
+    <Image
+      source={{ uri: category.icon_image }}
+      style={styles.categoryIcon}
+      resizeMode="contain"
+      fadeDuration={0}
+    />
+    <Text style={styles.categoryName}>{category.name}</Text>
+  </Pressable>
+));
 
-    fetchCategories();
-  }, []);
+export const CategorySection = ({ categories }: { categories: Category[] }) => {
+  const navigation = useNavigation<RootStackScreenProps<"MapList">["navigation"]>();
 
-  const handleCategoryPress = (categoryId: number) => {
-    navigation.navigate('MapList', { categoryId });
-  };
-
-  if (isLoading) {
-    return <View style={styles.loadingContainer} />;
-  }
+  const handleCategoryPress = useCallback((categoryId: number) => {
+    navigation.navigate("MapList", { categoryId });
+  }, [navigation]);
 
   return (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-    >
-      {categories.map((category) => (
-        <TouchableOpacity 
-          key={category.id}
-          style={styles.categoryItem}
-          onPress={() => handleCategoryPress(category.id)}
-        >
-          <Image 
-            source={{ uri: category.icon_image }} 
-            style={styles.icon}
+    <View style={styles.container}>
+      <Text style={styles.title}>카테고리</Text>
+      <FlatList
+        data={categories}
+        renderItem={({ item }) => (
+          <CategoryItem
+            category={item}
+            onPress={handleCategoryPress}
           />
-          <Text style={styles.text}>{category.display_name}</Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+        )}
+        keyExtractor={item => item.id.toString()}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        snapToInterval={ITEM_WIDTH + ITEM_SPACING}
+        contentContainerStyle={styles.list}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        getItemLayout={(_, index) => ({
+          length: ITEM_WIDTH + ITEM_SPACING,
+          offset: (ITEM_WIDTH + ITEM_SPACING) * index,
+          index,
+        })}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    marginVertical: 16,
   },
-  loadingContainer: {
-    height: 100,
+  title: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 12,
+    marginLeft: 16,
+  },
+  list: {
+    paddingHorizontal: 16,
   },
   categoryItem: {
+    width: ITEM_WIDTH,
+    marginRight: ITEM_SPACING,
     alignItems: 'center',
-    marginRight: 20,
-    width: 80,
   },
-  icon: {
+  categoryIcon: {
     width: 48,
     height: 48,
-    borderRadius: 24,
     marginBottom: 8,
   },
-  text: {
-    fontSize: 12,
-    textAlign: 'center',
+  categoryName: {
+    fontSize: 14,
     color: '#333',
+    textAlign: 'center',
   },
 });

@@ -2,7 +2,7 @@ import config from "../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { eventEmitter, AUTH_EVENTS } from '../utils/eventEmitter';
 
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   status_code: string;
   data: T;
   message?: string;
@@ -116,13 +116,18 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     try {
       const response = await this.fetchWithAuth(method, endpoint, options);
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new ApiError(response.status, data.message || 'API request failed');
+        throw new ApiError(response.status, responseData.message || 'API request failed');
       }
 
-      return data;
+      return {
+        status_code: responseData.status_code,
+        data: responseData.data,
+        message: responseData.message,
+        errors: responseData.errors
+      };
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         try {
@@ -140,7 +145,12 @@ class ApiClient {
             throw new ApiError(retryResponse.status, retryData.message || 'API request failed');
           }
 
-          return retryData;
+          return {
+            status_code: retryData.status_code,
+            data: retryData.data,
+            message: retryData.message,
+            errors: retryData.errors
+          };
         } catch (refreshError) {
           eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, '로그인 해주세요.');
           throw new ApiError(401, '로그인이 필요합니다.');
