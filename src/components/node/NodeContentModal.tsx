@@ -21,6 +21,7 @@ import AnswerModal from "./AnswerModal";
 import AnswerSubmitModal from "./AnswerSubmitModal";
 import { nodeService } from "../../api/services/nodeService";
 import type { AnswerSubmitResponse } from '../../types/answer';
+import { parseAndLinkify } from '../../utils/text';
 
 interface NodeContentModalProps {
   isVisible: boolean;
@@ -376,7 +377,9 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
                     </View>
 
                     <Text style={styles.title}>{node.title}</Text>
-                    <Text style={styles.description}>{node.description}</Text>
+                    <Text style={styles.description}>
+                      {parseAndLinkify(node.description, styles.linkText)}
+                    </Text>
 
                     {/* Active Rules 목록 */}
                     {node.active_rules.length > 0 && (
@@ -650,6 +653,9 @@ const styles = StyleSheet.create({
     color: '#2E5AAC',
     textAlign: 'center',
     fontWeight: '500',
+  },
+  linkText: {
+    color: '#1E88E5',
   },
 });
 
