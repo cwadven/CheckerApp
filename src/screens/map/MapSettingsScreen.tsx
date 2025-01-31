@@ -32,17 +32,8 @@ export const MapSettingsScreen = () => {
           isSubscribed: false,
           subscriberCount: 0
         });
-        navigation.reset({
-          index: 0,
-          routes: [
-            { 
-              name: 'Main',
-              params: { 
-                screen: 'MySubscription' as keyof MainTabParamList 
-              }
-            }
-          ],
-        });
+        navigation.goBack();
+        navigation.goBack();
       }
     } catch (error) {
       console.error('Unsubscribe error:', error);

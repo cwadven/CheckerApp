@@ -129,31 +129,6 @@ export const MapDetailScreen = () => {
     }
   };
 
-  const handleUnsubscribe = async () => {
-    try {
-      setIsSubscribing(true);
-      const response = await apiClient.delete(`/v1/subscription/map/${mapId}`);
-
-      if (response.status_code === 'success') {
-        setMap(prev => prev ? {
-          ...prev,
-          is_subscribed: false,
-          subscriber_count: prev.subscriber_count - 1
-        } : null);
-        
-        eventEmitter.emit(MAP_EVENTS.SUBSCRIPTION_UPDATED, {
-          mapId,
-          isSubscribed: false,
-          subscriberCount: map?.subscriber_count ? map.subscriber_count - 1 : 0
-        });
-      }
-    } catch (error) {
-      // ... 에러 처리 ...
-    } finally {
-      setIsSubscribing(false);
-    }
-  };
-
   useEffect(() => {
     loadMapDetail();
   }, [mapId]);
