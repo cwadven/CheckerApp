@@ -197,6 +197,14 @@ export const MapDetailScreen = () => {
             >
               <Ionicons name="arrow-back" size={24} color="#000" />
             </Pressable>
+            {map?.is_subscribed && (
+              <Pressable
+                style={styles.settingsButton}
+                onPress={() => navigation.navigate("MapSettings", { mapId: map.id })}
+              >
+                <Ionicons name="settings-outline" size={24} color="#000" />
+              </Pressable>
+            )}
           </View>
 
           <Image
@@ -526,5 +534,11 @@ const styles = StyleSheet.create({
   recentNodeDate: {
     fontSize: 12,
     color: '#666',
+  },
+  settingsButton: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+    padding: 8,
   },
 });

@@ -36,7 +36,7 @@ export class ApiError extends Error {
   }
 }
 
-class ApiClient {
+export class ApiClient {
   private baseUrl: string;
   private refreshPromise: Promise<TokenResponse> | null = null;
   private guestTokenPromise: Promise<{ access_token: string; refresh_token: string; is_member: boolean }> | null = null;
@@ -249,6 +249,10 @@ class ApiClient {
       body,
       headers,
     });
+  }
+
+  async delete<T>(endpoint: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+    return this.request<T>("DELETE", endpoint, { ...options, method: "DELETE" });
   }
 }
 

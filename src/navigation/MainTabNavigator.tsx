@@ -11,12 +11,13 @@ import { MapDetailScreen } from "../screens/map/MapDetailScreen";
 import { MapGraphScreen } from "../screens/map/MapGraphScreen";
 import { MapGraphLoadingScreen } from "../screens/map/MapGraphLoadingScreen";
 import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
+import { MapSettingsScreen } from "../screens/map/MapSettingsScreen";
 import { useAuth } from "../contexts/AuthContext";
-import { MainTabParamList } from "../types/navigation";
+import { MainTabParamList, RootStackParamList } from "../types/navigation";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const AuthStack = createNativeStackNavigator();
-const MainStack = createNativeStackNavigator();
+const MainStack = createNativeStackNavigator<RootStackParamList>();
 
 const AuthNavigator = () => {
   return (
@@ -32,7 +33,7 @@ const AuthNavigator = () => {
 };
 
 export const MainTabNavigator = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const renderProfileScreen = () => {
     if (!isAuthenticated) {
@@ -78,7 +79,7 @@ export const MainTabNavigator = () => {
         component={renderProfileScreen()}
         options={{
           title: "프로필",
-          tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+          tabBarIcon: ({ color, size } : { color: string; size: number }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
@@ -120,9 +121,15 @@ export const MainStackNavigator = () => {
         options={{ headerShown: false }}
       />
       <MainStack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ headerShown: false }}
+        name="MapSettings"
+        component={MapSettingsScreen}
+        options={{
+          headerShown: true,
+          title: "맵 설정",
+          headerTitleStyle: {
+            fontWeight: "600",
+          },
+        }}
       />
       <MainStack.Screen
         name="EditProfile"
