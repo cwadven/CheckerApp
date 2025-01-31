@@ -15,6 +15,7 @@ import { createMapPanResponder } from '../../utils/panResponderUtil';
 import { AlertModal } from "../../components/common/AlertModal";
 import { ApiError } from "api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 
 interface ViewportState {
   x: number;
@@ -145,6 +146,12 @@ export const MapGraphScreen = ({
         setNodes(prevNodes => 
           prevNodes.map(node => {
             if (response.data.completed_node_ids.includes(node.id)) {
+              eventEmitter.emit(MAP_EVENTS.NODE_COMPLETED, {
+                mapId,
+                nodeId: node.id,
+                completedAt: new Date().toISOString(),
+                name: node.name
+              });
               return { ...node, status: 'completed' };
             }
             if (response.data.going_to_in_progress_node_ids.includes(node.id)) {

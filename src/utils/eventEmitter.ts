@@ -28,5 +28,24 @@ export const AUTH_EVENTS = {
 };
 
 export const MAP_EVENTS = {
-  SUBSCRIPTION_UPDATED: 'map:subscriptionUpdated'
+  SUBSCRIPTION_UPDATED: 'map:subscription-updated',
+  NODE_COMPLETED: 'map:node-completed'
+} as const;
+
+export interface SubscriptionUpdatedEvent {
+  mapId: number;
+  isSubscribed: boolean;
+  subscriberCount: number;
+}
+
+export interface NodeCompletedEvent {
+  mapId: number;
+  nodeId: number;
+  completedAt: string;
+  name?: string;
+}
+
+type MapEvents = {
+  [MAP_EVENTS.SUBSCRIPTION_UPDATED]: SubscriptionUpdatedEvent;
+  [MAP_EVENTS.NODE_COMPLETED]: NodeCompletedEvent;
 }; 

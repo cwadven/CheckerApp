@@ -21,6 +21,7 @@ import { AlertModal } from "../../components/common/AlertModal";
 import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 import { AUTH_EVENTS } from "../../utils/eventEmitter";
 import { ApiError } from "../../api/client";
+import type { NodeCompletedEvent } from "../../utils/eventEmitter";
 
 type RouteProps = RootStackScreenProps<"MapDetail">;
 
@@ -131,6 +132,47 @@ export const MapDetailScreen = () => {
 
   useEffect(() => {
     loadMapDetail();
+  }, [mapId]);
+
+  useEffect(() => {
+    const handleNodeCompleted = (event: NodeCompletedEvent) => {
+      if (event.mapId === mapId) {
+        setMap(prevMap => {
+          if (!prevMap) return null;
+          
+          const progress = prevMap.progress || {
+            recent_activated_nodes: [],
+            percentage: 0,
+            completed_node_count: 0,
+            total_node_count: 1  // 최소 1개
+          };
+
+          return {
+            ...prevMap,
+            progress: {
+              ...progress,
+              recent_activated_nodes: [
+                {
+                  id: event.nodeId,
+                  name: event.name || '',
+                  activated_at: event.completedAt
+                },
+                ...progress.recent_activated_nodes.slice(0, 2)
+              ],
+              percentage: Math.min(100, ((progress.completed_node_count + 1) / progress.total_node_count) * 100),
+              completed_node_count: progress.completed_node_count + 1,
+              total_node_count: progress.total_node_count
+            }
+          };
+        });
+      }
+    };
+
+    eventEmitter.on(MAP_EVENTS.NODE_COMPLETED, handleNodeCompleted);
+    
+    return () => {
+      eventEmitter.off(MAP_EVENTS.NODE_COMPLETED, handleNodeCompleted);
+    };
   }, [mapId]);
 
   const handleStartMap = () => {
