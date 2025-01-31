@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { View, StyleSheet, SafeAreaView, Dimensions, Platform, PanResponder, Animated, Modal } from "react-native";
 import type { RootStackScreenProps } from "../../types/navigation";
 import { GridBackground } from "../../components/map/GridBackground";
@@ -14,7 +14,14 @@ import { GRAPH_PADDING } from "../../constants/layout";
 import { createMapPanResponder } from '../../utils/panResponderUtil';
 import { AlertModal } from "../../components/common/AlertModal";
 import { ApiError } from "api/client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
+interface ViewportState {
+  x: number;
+  y: number;
+  zoom: number;
+  lastUpdated: number;
+}
 
 export const MapGraphScreen = ({
   route,
@@ -173,6 +180,59 @@ export const MapGraphScreen = ({
       console.error('Failed to fetch node details:', error);
     }
   };
+
+  const saveViewportState = useCallback(async () => {
+    if (!mapId) return;
+    
+    const viewportState: ViewportState = {
+      x: pan.x._value,
+      y: pan.y._value,
+      zoom: scale._value,
+      lastUpdated: Date.now()
+    };
+    
+    try {
+      await AsyncStorage.setItem(
+        `map_viewport_${mapId}`,
+        JSON.stringify(viewportState)
+      );
+    } catch (error) {
+      console.error('Failed to save viewport state:', error);
+    }
+  }, [mapId, pan.x, pan.y, scale]);
+
+  const loadViewportState = useCallback(async () => {
+    if (!mapId) return;
+    
+    try {
+      const savedState = await AsyncStorage.getItem(`map_viewport_${mapId}`);
+      if (savedState) {
+        const viewportState = JSON.parse(savedState) as ViewportState;
+        
+        // 유효성 검사 추가
+        if (typeof viewportState.x === 'number' && 
+            typeof viewportState.y === 'number' && 
+            typeof viewportState.zoom === 'number') {
+          pan.x.setValue(viewportState.x);
+          pan.y.setValue(viewportState.y);
+          scale.setValue(viewportState.zoom);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load viewport state:', error);
+    }
+  }, [mapId, pan.x, pan.y, scale]);
+
+  // 컴포넌트 마운트 시 저장된 상태 로드
+  useEffect(() => {
+    loadViewportState();
+  }, [loadViewportState]);
+
+  // 뷰포트 변경 시 상태 저장 (디바운스 적용)
+  useEffect(() => {
+    const timeoutId = setTimeout(saveViewportState, 500);
+    return () => clearTimeout(timeoutId);
+  }, [pan.x._value, pan.y._value, scale._value, saveViewportState]);
 
   return (
     <SafeAreaView style={styles.container}>
