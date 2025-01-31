@@ -280,7 +280,7 @@ export const MapDetailScreen = () => {
 
                 {map.progress.recent_activated_nodes?.length > 0 && (
                   <>
-                    <Text style={[styles.sectionTitle, { marginTop: 24 }]}>최근 해결한 문제</Text>
+                    <Text style={[styles.sectionTitle, { marginTop: 24 }]}>최근 해결한 노드</Text>
                     <View style={styles.recentNodesList}>
                       {map.progress.recent_activated_nodes.slice(0, 3).map((node) => (
                         <View key={node.id} style={styles.recentNode}>
