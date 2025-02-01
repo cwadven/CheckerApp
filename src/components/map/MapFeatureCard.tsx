@@ -33,6 +33,12 @@ export const MapFeatureCard = ({ map, onPress }: Props) => (
       source={{ uri: map.background_image }} 
       style={styles.mapBackground}
     />
+    {map.is_subscribed && (
+      <View style={styles.subscribeBadge}>
+        <Ionicons name="bookmark" size={12} color="white" />
+        <Text style={styles.subscribeBadgeText}>구독중</Text>
+      </View>
+    )}
     <View style={styles.mapContent}>
       <View style={styles.mapIconContainer}>
         <Image 
@@ -120,5 +126,27 @@ const styles = StyleSheet.create({
   statText: {
     fontSize: 14,
     color: '#666',
+  },
+  subscribeBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  subscribeBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
 }); 
