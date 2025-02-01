@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,35 +10,137 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Modal,
+  ActivityIndicator
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { launchImageLibrary, Asset } from 'react-native-image-picker';
 import type { RootStackScreenProps } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { apiClient, ApiError } from "../../api/client";
+import { profileService } from "../../api/services/profileService";
+
+interface ProfileData {
+  id: number;
+  nickname: string;
+  profile_image: string | null;
+  subscribed_map_count: number;
+}
+
+interface ProfileUpdateResponse {
+  status_code: string;
+  data: {
+    id: number;
+    nickname: string;
+    profile_image: string;
+    subscribed_map_count: number;
+  };
+}
 
 export const EditProfileScreen = ({
   navigation,
 }: RootStackScreenProps<"EditProfile">) => {
-  const { user, isLoading } = useAuth();
-  const [nickname, setNickname] = useState(user?.nickname || "");
+  const { updateUser } = useAuth();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [nickname, setNickname] = useState("");
+  const [selectedImage, setSelectedImage] = useState<Asset | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorModal, setErrorModal] = useState({ visible: false, message: '' });
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await profileService.getProfile();
+        setProfileData(response.data);
+        setNickname(response.data.nickname);
+      } catch (error) {
+        console.error('Profile loading error:', error);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const handleUpdateProfile = async () => {
     if (nickname.length < 2) {
-      Alert.alert("오류", "닉네임은 2자 이상이어야 합니다.");
+      setErrorModal({
+        visible: true,
+        message: "닉네임은 2자 이상이어야 합니다."
+      });
+      return;
+    }
+
+    if (nickname === profileData?.nickname && !selectedImage) {
+      navigation.goBack();
       return;
     }
 
     try {
-      // TODO: 프로필 업데이트 API 호출
-      navigation.goBack();
+      setIsLoading(true);
+      const formData = new FormData();
+      
+      if (nickname !== profileData?.nickname) {
+        formData.append('nickname', nickname);
+      }
+
+      if (selectedImage) {
+        if (!selectedImage.uri) {
+          setErrorModal({
+            visible: true,
+            message: "이미지 파일을 불러오는데 실패했습니다."
+          });
+          return;
+        }
+        
+        if (Platform.OS === 'web') {
+          const response = await fetch(selectedImage.uri);
+          const blob = await response.blob();
+          formData.append('profile_image', blob, selectedImage.fileName);
+        } else {
+          formData.append('profile_image', {
+            uri: selectedImage.uri,
+            type: selectedImage.type || 'application/octet-stream',
+            name: selectedImage.fileName || 'profile.jpg',
+          } as any);
+        }
+      }
+
+      const response = await apiClient.patch<ProfileUpdateResponse>('/v1/member/profile', formData);
+
+      if (response.status_code === 'success') {
+        updateUser(response.data);
+        navigation.goBack();
+      }
     } catch (error) {
-      console.error(error);
-      Alert.alert("오류", "프로필 수정에 실패했습니다.");
+      if (error instanceof ApiError && error.errors) {
+        const firstError = Object.values(error.errors)[0]?.[0];
+        if (firstError) {
+          setErrorModal({
+            visible: true,
+            message: firstError
+          });
+        }
+      } else {
+        setErrorModal({
+          visible: true,
+          message: error instanceof ApiError ? error.message : '프로필 수정에 실패했습니다.'
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleChangeProfileImage = () => {
-    // TODO: 이미지 선택/업로드 기능 구현
-    Alert.alert("알림", "프로필 이미지 변��� 기능은 준비 중입니다.");
+  const handleChangeProfileImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 1,
+      selectionLimit: 1,
+    });
+
+    if (!result.didCancel && result.assets?.[0]) {
+      setSelectedImage(result.assets[0]);
+    }
   };
 
   return (
@@ -52,9 +154,9 @@ export const EditProfileScreen = ({
             style={styles.profileImageContainer}
             onPress={handleChangeProfileImage}
           >
-            {user?.profile_image ? (
+            {selectedImage?.uri || profileData?.profile_image ? (
               <Image
-                source={{ uri: user.profile_image }}
+                source={{ uri: selectedImage?.uri || profileData?.profile_image }}
                 style={styles.profileImage}
               />
             ) : (
@@ -69,14 +171,6 @@ export const EditProfileScreen = ({
         </View>
 
         <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>이메일</Text>
-            <TextInput
-              style={[styles.input, styles.disabledInput]}
-              value={user?.email}
-              editable={false}
-            />
-          </View>
           <View style={styles.inputContainer}>
             <Text style={styles.label}>닉네임</Text>
             <TextInput
@@ -94,11 +188,32 @@ export const EditProfileScreen = ({
           onPress={handleUpdateProfile}
           disabled={isLoading}
         >
-          <Text style={styles.saveButtonText}>
-            {isLoading ? "저장 중..." : "저장하기"}
-          </Text>
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.saveButtonText}>저장하기</Text>
+          )}
         </Pressable>
       </ScrollView>
+
+      <Modal
+        visible={errorModal.visible}
+        transparent
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>오류</Text>
+            <Text style={styles.modalMessage}>{errorModal.message}</Text>
+            <Pressable 
+              style={styles.modalButton}
+              onPress={() => setErrorModal(prev => ({ ...prev, visible: false }))}
+            >
+              <Text style={styles.modalButtonText}>확인</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -183,5 +298,42 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    width: '85%',
+    maxWidth: 340,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  modalButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

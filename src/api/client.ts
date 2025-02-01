@@ -30,7 +30,11 @@ interface TokenResponse extends Pick<ApiResponse<{
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number, 
+    message: string,
+    public errors?: Record<string, string[]>
+  ) {
     super(message);
     this.name = 'ApiError';
   }
@@ -133,7 +137,11 @@ export class ApiClient {
       const responseData = await response.json();
 
       if (!response.ok) {
-        throw new ApiError(response.status, responseData.message || 'API request failed');
+        throw new ApiError(
+          response.status, 
+          responseData.message || 'API request failed',
+          responseData.errors
+        );
       }
 
       return {
@@ -156,7 +164,7 @@ export class ApiClient {
           const retryData = await retryResponse.json();
           
           if (!retryResponse.ok) {
-            throw new ApiError(retryResponse.status, retryData.message || 'API request failed');
+            throw new ApiError(retryResponse.status, retryData.message || 'API request failed', retryData.errors);
           }
 
           return {
@@ -253,6 +261,20 @@ export class ApiClient {
 
   async delete<T>(endpoint: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
     return this.request<T>("DELETE", endpoint, { ...options, method: "DELETE" });
+  }
+
+  async patch<T>(endpoint: string, data?: any, options: RequestOptions = {}): Promise<ApiResponse<T>> {
+    const body = data instanceof FormData ? data : (data ? JSON.stringify(data) : undefined);
+    const headers = data instanceof FormData 
+      ? { ...options.headers }
+      : { 'Content-Type': 'application/json', ...options.headers };
+
+    return this.request<T>("PATCH", endpoint, {
+      ...options,
+      method: "PATCH",
+      body,
+      headers,
+    });
   }
 }
 

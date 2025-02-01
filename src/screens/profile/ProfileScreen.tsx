@@ -15,6 +15,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { LogoutModal } from "../../components/modals/LogoutModal";
 import { profileService } from "../../api/services/profileService";
 import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
+import { useFocusEffect } from '@react-navigation/native';
 
 interface ProfileData {
   id: number;
@@ -31,9 +32,11 @@ export const ProfileScreen = ({
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [loadProfile])
+  );
 
   useEffect(() => {
     const handleSubscriptionUpdate = ({
