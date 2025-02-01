@@ -138,6 +138,14 @@ export const ProfileScreen = ({
             <Text style={styles.menuText}>도움말</Text>
             <Ionicons name="chevron-forward" size={24} color="#666" />
           </Pressable>
+          <Pressable
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('MyMaps')}
+          >
+            <Ionicons name="map-outline" size={24} color="#666" />
+            <Text style={styles.menuItemText}>내가 작성한 맵</Text>
+            <Ionicons name="chevron-forward" size={24} color="#666" />
+          </Pressable>
         </View>
 
         <Pressable
@@ -276,5 +284,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  menuItemText: {
+    flex: 1,
+    fontSize: 16,
+    marginLeft: 12,
   },
 });

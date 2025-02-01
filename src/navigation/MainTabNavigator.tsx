@@ -14,6 +14,7 @@ import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
 import { MapSettingsScreen } from "../screens/map/MapSettingsScreen";
 import { useAuth } from "../contexts/AuthContext";
 import { MainTabParamList, RootStackParamList } from "../types/navigation";
+import { MyMapsScreen } from "../screens/profile/MyMapsScreen";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const AuthStack = createNativeStackNavigator();
@@ -137,6 +138,15 @@ export const MainStackNavigator = () => {
         options={{
           headerShown: true,
           title: "프로필 수정",
+          headerBackTitle: "뒤로",
+        }}
+      />
+      <MainStack.Screen
+        name="MyMaps"
+        component={MyMapsScreen}
+        options={{
+          headerShown: true,
+          title: "내 맵 목록",
           headerBackTitle: "뒤로",
         }}
       />

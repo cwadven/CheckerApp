@@ -1,0 +1,186 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  ActivityIndicator,
+  Image,
+  Pressable,
+} from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import type { RootStackScreenProps } from "../../types/navigation";
+import { apiClient } from "../../api/client";
+import { MapFeatureCard } from '../../components/map/MapFeatureCard';
+
+interface Map {
+  id: number;
+  name: string;
+  description: string;
+  icon_image: string;
+  background_image: string;
+  subscriber_count: number;
+  view_count: number;
+  is_subscribed: boolean;
+  created_by: {
+    id: number;
+    nickname: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+interface MyMapsResponse {
+  status_code: string;
+  data: {
+    maps: Map[];
+    next_cursor: string | null;
+    has_more: boolean;
+  };
+}
+
+export const MyMapsScreen = ({ navigation }: RootStackScreenProps<"MyMaps">) => {
+  const [maps, setMaps] = useState<Map[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  useEffect(() => {
+    loadMaps();
+  }, [loadMaps]);
+
+  const loadMaps = useCallback(async (cursor?: string, search?: string) => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams();
+      if (cursor) params.append('next_cursor', cursor);
+      if (search) params.append('search', search);
+
+      const response = await apiClient.get<MyMapsResponse>(
+        `/v1/map/my${params.toString() ? `?${params.toString()}` : ''}`
+      );
+
+      if (response.status_code === 'success') {
+        setMaps(prev => cursor ? [...prev, ...response.data.maps] : response.data.maps);
+        setNextCursor(response.data.next_cursor);
+        setHasMore(response.data.has_more);
+      }
+    } catch (error: any) {
+      if (error.status_code === 'login-required') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Auth' }],
+        });
+      }
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  }, [navigation]);
+
+  const handleSearch = useCallback(() => {
+    loadMaps(undefined, searchQuery);
+  }, [loadMaps, searchQuery]);
+
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore && nextCursor) {
+      setIsLoadingMore(true);
+      loadMaps(nextCursor, searchQuery);
+    }
+  };
+
+  const renderItem = ({ item }: { item: Map }) => (
+    <MapFeatureCard
+      map={item}
+      onPress={(mapId) => navigation.navigate('MapDetail', { mapId })}
+    />
+  );
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color="#666" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="맵 검색"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+          />
+        </View>
+      </View>
+
+      <FlatList
+        contentContainerStyle={styles.listContainer}
+        data={maps}
+        renderItem={renderItem}
+        keyExtractor={item => item.id.toString()}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isLoadingMore ? <ActivityIndicator size="large" color="#4CAF50" /> : null
+        }
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>작성한 맵이 없습니다.</Text>
+            </View>
+          ) : null
+        }
+      />
+
+      {isLoading && !isLoadingMore && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+        </View>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  searchContainer: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    height: 40,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 16,
+  },
+  listContainer: {
+    paddingTop: 16,
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+  },
+}); 
