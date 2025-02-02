@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { RootStackScreenProps } from "../../types/navigation";
 import { apiClient } from "../../api/client";
 import { MapFeatureCard } from '../../components/map/MapFeatureCard';
+import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 
 interface Map {
   id: number;
@@ -48,27 +49,35 @@ export const MyMapsScreen = ({ navigation }: RootStackScreenProps<"MyMaps">) => 
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  useEffect(() => {
-    loadMaps();
-  }, [loadMaps]);
-
   const loadMaps = useCallback(async (cursor?: string, search?: string) => {
     try {
-      setIsLoading(true);
+      if (!cursor || search) {
+        setIsLoading(true);
+      }
+      
       const params = new URLSearchParams();
       if (cursor) params.append('next_cursor', cursor);
       if (search) params.append('search', search);
+
+      console.log('Loading maps with params:', params.toString());
 
       const response = await apiClient.get<MyMapsResponse>(
         `/v1/map/my${params.toString() ? `?${params.toString()}` : ''}`
       );
 
+      console.log('Response:', response);
+
       if (response.status_code === 'success') {
-        setMaps(prev => cursor ? [...prev, ...response.data.maps] : response.data.maps);
+        if (!cursor || search) {
+          setMaps(response.data.maps);
+        } else {
+          setMaps(prev => [...prev, ...response.data.maps]);
+        }
         setNextCursor(response.data.next_cursor);
         setHasMore(response.data.has_more);
       }
     } catch (error: any) {
+      console.error('Error loading maps:', error);
       if (error.status_code === 'login-required') {
         navigation.reset({
           index: 0,
@@ -81,16 +90,51 @@ export const MyMapsScreen = ({ navigation }: RootStackScreenProps<"MyMaps">) => 
     }
   }, [navigation]);
 
+  useEffect(() => {
+    loadMaps();
+  }, [loadMaps]);
+
+  // 구독 상태 변경 감지
+  useEffect(() => {
+    const handleSubscriptionUpdate = ({
+      mapId,
+      isSubscribed
+    }: {
+      mapId: number;
+      isSubscribed: boolean;
+      subscriberCount: number;
+    }) => {
+      setMaps(prevMaps => 
+        prevMaps.map(map => 
+          map.id === mapId 
+            ? { 
+                ...map, 
+                is_subscribed: isSubscribed,
+                subscriber_count: isSubscribed 
+                  ? map.subscriber_count + 1 
+                  : map.subscriber_count - 1
+              }
+            : map
+        )
+      );
+    };
+
+    eventEmitter.on(MAP_EVENTS.SUBSCRIPTION_UPDATED, handleSubscriptionUpdate);
+    return () => {
+      eventEmitter.off(MAP_EVENTS.SUBSCRIPTION_UPDATED, handleSubscriptionUpdate);
+    };
+  }, []);
+
   const handleSearch = useCallback(() => {
     loadMaps(undefined, searchQuery);
   }, [loadMaps, searchQuery]);
 
-  const handleLoadMore = () => {
-    if (!isLoadingMore && hasMore && nextCursor) {
+  const handleLoadMore = useCallback(() => {
+    if (!isLoading && !isLoadingMore && hasMore && nextCursor) {
       setIsLoadingMore(true);
       loadMaps(nextCursor, searchQuery);
     }
-  };
+  }, [isLoading, isLoadingMore, hasMore, nextCursor, searchQuery, loadMaps]);
 
   const renderItem = ({ item }: { item: Map }) => (
     <MapFeatureCard
@@ -116,14 +160,24 @@ export const MyMapsScreen = ({ navigation }: RootStackScreenProps<"MyMaps">) => 
       </View>
 
       <FlatList
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[
+          styles.listContainer,
+          maps.length === 0 && styles.emptyListContainer
+        ]}
         data={maps}
         renderItem={renderItem}
         keyExtractor={item => item.id.toString()}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
+        onMomentumScrollBegin={() => {
+          setIsLoadingMore(false);
+        }}
         ListFooterComponent={
-          isLoadingMore ? <ActivityIndicator size="large" color="#4CAF50" /> : null
+          hasMore && maps.length > 0 ? (
+            <View style={styles.footerLoader}>
+              <ActivityIndicator size="large" color="#4CAF50" />
+            </View>
+          ) : null
         }
         ListEmptyComponent={
           !isLoading ? (
@@ -182,5 +236,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#666',
+  },
+  footerLoader: {
+    paddingVertical: 16,
+  },
+  emptyListContainer: {
+    flexGrow: 1,
   },
 }); 
