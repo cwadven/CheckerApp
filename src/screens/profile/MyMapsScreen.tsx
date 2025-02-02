@@ -1,18 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   FlatList,
-  TextInput,
-  ActivityIndicator,
-  Image,
-  Pressable,
 } from 'react-native';
-import { Ionicons } from "@expo/vector-icons";
 import type { RootStackScreenProps } from "../../types/navigation";
 import { apiClient } from "../../api/client";
-import { MapFeatureCard } from '../../components/map/MapFeatureCard';
 import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 import { MapList } from '../../components/map/MapList';
 
@@ -24,6 +16,7 @@ interface Map {
   background_image: string;
   subscriber_count: number;
   view_count: number;
+  is_private: boolean;
   is_subscribed: boolean;
   created_by: {
     id: number;

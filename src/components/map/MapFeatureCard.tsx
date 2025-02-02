@@ -10,6 +10,7 @@ interface Map {
   background_image: string;
   subscriber_count: number;
   view_count: number;
+  is_private: boolean;
   is_subscribed: boolean;
   created_by: {
     id: number;
@@ -33,12 +34,20 @@ export const MapFeatureCard = ({ map, onPress }: Props) => (
       source={{ uri: map.background_image }} 
       style={styles.mapBackground}
     />
-    {map.is_subscribed && (
-      <View style={styles.subscribeBadge}>
-        <Ionicons name="bookmark" size={12} color="white" />
-        <Text style={styles.subscribeBadgeText}>구독중</Text>
-      </View>
-    )}
+    <View style={styles.badgeContainer}>
+      {map.is_subscribed && (
+        <View style={styles.subscribeBadge}>
+          <Ionicons name="bookmark" size={12} color="white" />
+          <Text style={styles.badgeText}>구독중</Text>
+        </View>
+      )}
+      {map.is_private && (
+        <View style={styles.privateBadge}>
+          <Ionicons name="lock-closed" size={12} color="white" />
+          <Text style={styles.badgeText}>비공개</Text>
+        </View>
+      )}
+    </View>
     <View style={styles.mapContent}>
       <View style={styles.mapIconContainer}>
         <Image 
@@ -127,10 +136,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  subscribeBadge: {
+  badgeContainer: {
     position: 'absolute',
     top: 12,
     right: 12,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  subscribeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(76, 175, 80, 0.9)',
@@ -144,7 +157,21 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-  subscribeBadgeText: {
+  privateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(33, 33, 33, 0.9)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  badgeText: {
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
