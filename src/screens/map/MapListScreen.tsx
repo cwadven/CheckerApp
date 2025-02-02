@@ -1,91 +1,57 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  Text,
-} from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { MapCard } from "../../components/map/MapCard";
-import { SearchBar } from "../../components/common/SearchBar";
-import type { Map, MapListResponse } from "../../types/map";
-import { mapService } from "../../api/services/mapService";
+import React, { useState, useCallback, useEffect } from 'react';
 import type { RootStackScreenProps } from "../../types/navigation";
+import { apiClient } from "../../api/client";
+import { MapList } from '../../components/map/MapList';
+import type { Map, MapListResponse } from '../../types/map';
 import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 
 interface RouteParams {
   categoryId?: number;
 }
 
-export const MapListScreen = () => {
-  const route = useRoute();
-  const navigation =
-    useNavigation<RootStackScreenProps<"MapDetail">["navigation"]>();
+export const MapListScreen = ({ navigation, route }: RootStackScreenProps<"MapList">) => {
   const { categoryId } = (route.params as RouteParams) || {};
-
   const [maps, setMaps] = useState<Map[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const loadMaps = async (params: {
-    cursor?: string;
-    search?: string;
-    reset?: boolean;
-  }) => {
+  const loadMaps = useCallback(async (cursor?: string, search?: string) => {
     try {
-      if (params.cursor) {
-        setIsLoadingMore(true);
-      } else {
+      if (!cursor) {
         setIsLoading(true);
+        setMaps([]);
       }
-      setError(null);
+      
+      const params = new URLSearchParams();
+      if (cursor) params.append('next_cursor', cursor);
+      if (search) params.append('search', search);
+      if (categoryId) params.append('category_id', categoryId.toString());
 
-      const response = await mapService.getMapList({
-        categoryId,
-        next_cursor: params.cursor,
-        search: params.search,
-      });
-
-      const { maps: newMaps, next_cursor, has_more } = response.data;
-
-      setMaps((prev) => (params.reset ? newMaps : [...prev, ...newMaps]));
-      setNextCursor(next_cursor);
-      setHasMore(has_more);
-    } catch (err) {
-      console.error("❌ Failed to load maps:", err);
-      setError(
-        err instanceof Error ? err.message : "맵 목록을 불러오는데 실패했습니다"
+      const response = await apiClient.get<MapListResponse>(
+        `/v1/map${params.toString() ? `?${params.toString()}` : ''}`
       );
+
+      if (response.status_code === 'success') {
+        setMaps(prev => cursor ? [...prev, ...response.data.maps] : response.data.maps);
+        setNextCursor(response.data.next_cursor);
+        setHasMore(response.data.has_more);
+      }
+    } catch (error: any) {
+      // 에러 처리
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    loadMaps({ search: query, reset: true });
-  };
-
-  const handleLoadMore = () => {
-    if (!isLoadingMore && !isLoading && hasMore && nextCursor) {
-      loadMaps({ cursor: nextCursor, search: searchQuery });
-    }
-  };
-
-  const handleMapPress = (mapId: number) => {
-    navigation.navigate("MapDetail", { mapId });
-  };
-
-  useEffect(() => {
-    loadMaps({});
   }, [categoryId]);
 
+  useEffect(() => {
+    loadMaps();
+  }, [loadMaps, categoryId]);  // categoryId 변경 시에도 다시 로드
+
+  // 구독 상태 변경 감지
   useEffect(() => {
     const handleSubscriptionUpdate = ({
       mapId,
@@ -115,80 +81,29 @@ export const MapListScreen = () => {
     };
   }, []);
 
-  const renderFooter = () => {
-    if (!isLoadingMore) return null;
-    return (
-      <View style={styles.footer}>
-        <ActivityIndicator size="small" color="#4CAF50" />
-      </View>
-    );
-  };
+  const handleSearch = useCallback(() => {
+    loadMaps(undefined, searchQuery);
+  }, [loadMaps, searchQuery]);
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
-        </View>
-      );
+  const handleLoadMore = useCallback(() => {
+    if (!isLoading && !isLoadingMore && hasMore && nextCursor) {
+      setIsLoadingMore(true);
+      loadMaps(nextCursor, searchQuery);
     }
-
-    if (error) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      );
-    }
-
-    return (
-      <FlatList
-        data={maps}
-        renderItem={({ item }) => (
-          <MapCard map={item} onPress={() => handleMapPress(item.id)} />
-        )}
-        keyExtractor={(item) => item.id.toString()}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={renderFooter}
-        contentContainerStyle={styles.list}
-      />
-    );
-  };
+  }, [isLoading, isLoadingMore, hasMore, nextCursor, searchQuery, loadMaps]);
 
   return (
-    <View style={styles.container}>
-      <SearchBar
-        onSearch={handleSearch}
-        placeholder="맵 검색"
-        initialValue={searchQuery}
-      />
-      {renderContent()}
-    </View>
+    <MapList
+      maps={maps}
+      isLoading={isLoading}
+      isLoadingMore={isLoadingMore}
+      hasMore={hasMore}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      onSearch={handleSearch}
+      onLoadMore={handleLoadMore}
+      onMapPress={(mapId) => navigation.navigate('MapDetail', { mapId })}
+      emptyText="맵이 없습니다."
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  list: {
-    padding: 16,
-  },
-  footer: {
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  errorText: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-  },
-});
