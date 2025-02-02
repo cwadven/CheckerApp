@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -48,31 +48,26 @@ export const MyMapsScreen = ({ navigation }: RootStackScreenProps<"MyMaps">) => 
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const listRef = useRef<FlatList>(null);
 
   const loadMaps = useCallback(async (cursor?: string, search?: string) => {
     try {
-      if (!cursor || search) {
+      if (!cursor) {  // 첫 로드나 새 검색일 때만
         setIsLoading(true);
+        setMaps([]); // 데이터 초기화
+        setNextCursor(null); // 커서도 초기화
       }
       
       const params = new URLSearchParams();
       if (cursor) params.append('next_cursor', cursor);
       if (search) params.append('search', search);
 
-      console.log('Loading maps with params:', params.toString());
-
       const response = await apiClient.get<MyMapsResponse>(
         `/v1/map/my${params.toString() ? `?${params.toString()}` : ''}`
       );
 
-      console.log('Response:', response);
-
       if (response.status_code === 'success') {
-        if (!cursor || search) {
-          setMaps(response.data.maps);
-        } else {
-          setMaps(prev => [...prev, ...response.data.maps]);
-        }
+        setMaps(prev => [...prev, ...response.data.maps]);
         setNextCursor(response.data.next_cursor);
         setHasMore(response.data.has_more);
       }
@@ -126,6 +121,7 @@ export const MyMapsScreen = ({ navigation }: RootStackScreenProps<"MyMaps">) => 
   }, []);
 
   const handleSearch = useCallback(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
     loadMaps(undefined, searchQuery);
   }, [loadMaps, searchQuery]);
 
@@ -160,6 +156,7 @@ export const MyMapsScreen = ({ navigation }: RootStackScreenProps<"MyMaps">) => 
       </View>
 
       <FlatList
+        ref={listRef}
         contentContainerStyle={[
           styles.listContainer,
           maps.length === 0 && styles.emptyListContainer
