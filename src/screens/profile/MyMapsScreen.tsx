@@ -14,6 +14,7 @@ import type { RootStackScreenProps } from "../../types/navigation";
 import { apiClient } from "../../api/client";
 import { MapFeatureCard } from '../../components/map/MapFeatureCard';
 import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
+import { MapList } from '../../components/map/MapList';
 
 interface Map {
   id: number;
@@ -132,65 +133,19 @@ export const MyMapsScreen = ({ navigation }: RootStackScreenProps<"MyMaps">) => 
     }
   }, [isLoading, isLoadingMore, hasMore, nextCursor, searchQuery, loadMaps]);
 
-  const renderItem = ({ item }: { item: Map }) => (
-    <MapFeatureCard
-      map={item}
-      onPress={(mapId) => navigation.navigate('MapDetail', { mapId })}
-    />
-  );
-
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={20} color="#666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="맵 검색"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
-            returnKeyType="search"
-          />
-        </View>
-      </View>
-
-      <FlatList
-        ref={listRef}
-        contentContainerStyle={[
-          styles.listContainer,
-          maps.length === 0 && styles.emptyListContainer
-        ]}
-        data={maps}
-        renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        onMomentumScrollBegin={() => {
-          setIsLoadingMore(false);
-        }}
-        ListFooterComponent={
-          hasMore && maps.length > 0 ? (
-            <View style={styles.footerLoader}>
-              <ActivityIndicator size="large" color="#4CAF50" />
-            </View>
-          ) : null
-        }
-        ListEmptyComponent={
-          !isLoading ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>작성한 맵이 없습니다.</Text>
-            </View>
-          ) : null
-        }
-      />
-
-      {isLoading && !isLoadingMore && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4CAF50" />
-        </View>
-      )}
-    </View>
+    <MapList
+      maps={maps}
+      isLoading={isLoading}
+      isLoadingMore={isLoadingMore}
+      hasMore={hasMore}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      onSearch={handleSearch}
+      onLoadMore={handleLoadMore}
+      onMapPress={(mapId) => navigation.navigate('MapDetail', { mapId })}
+      emptyText="작성한 맵이 없습니다."
+    />
   );
 };
 

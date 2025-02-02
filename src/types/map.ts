@@ -12,6 +12,7 @@ export interface Map {
     nickname: string;
   };
   created_at: string;
+  updated_at: string;
   progress?: {
     percentage: number;
     completed_node_count: number;
