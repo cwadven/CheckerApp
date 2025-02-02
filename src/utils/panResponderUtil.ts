@@ -82,16 +82,21 @@ export const createMapPanResponder = ({
           return;
         }
 
+        // 스케일 계산
         const scaleFactor = distance / lastDistance.current;
         const newScale = Math.min(Math.max(scale._value * scaleFactor, 0.5), 3);
         
+        // 핀치 제스처의 이동 거리 계산
         const pinchDeltaX = currentFocalPoint.x - lastFocalPoint.x;
         const pinchDeltaY = currentFocalPoint.y - lastFocalPoint.y;
 
+        // 스케일 업데이트
         scale.setValue(newScale);
+
+        // 핀치 제스처의 이동과 드래그 제스처의 이동을 결합
         pan.setValue({
-          x: pinchDeltaX / newScale,
-          y: pinchDeltaY / newScale
+          x: (pinchDeltaX + gestureState.dx) / newScale,
+          y: (pinchDeltaY + gestureState.dy) / newScale
         });
 
         lastFocalPoint = currentFocalPoint;
