@@ -24,7 +24,15 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.qosmo.qosmoclient"
+      "package": "com.qosmo.qosmoclient",
+      "permissions": [
+        "android.permission.DETECT_SCREEN_CAPTURE",
+        "android.permission.INTERNET"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

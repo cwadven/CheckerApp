@@ -7,7 +7,6 @@ import { MapNode } from "../../components/map/MapNode";
 import { MapHeader } from "../../components/map/MapHeader";
 import { NodeDetailModal } from "../../components/node/NodeDetailModal";
 import type { Node, Arrow } from "../../types/graph";
-import { nodeService } from "../../api/services/nodeService";
 import type { AnswerSubmitResponse } from '../../types/answer';
 import { DEFAULT_NODE_SIZE } from "../../components/map/MapNode";
 import { GRAPH_PADDING } from "../../constants/layout";
@@ -72,14 +71,6 @@ export const MapGraphScreen = ({
       setIsPanning,
     })
   ).current;
-
-  const animatedStyle = {
-    transform: [
-      { translateX: pan.x },
-      { translateY: pan.y },
-      { scale: scale },
-    ],
-  };
 
   const handleNodePress = (node: Node) => {
     setSelectedNodeId(node.id);
