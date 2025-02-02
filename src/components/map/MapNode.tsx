@@ -25,23 +25,36 @@ export const MapNode = ({ node, layout, theme, onPress }: MapNodeProps) => {
   return (
     <Pressable
       key={`node-${node.id}`}
-      style={[
+      style={({ pressed }) => [
         styles.container,
         {
           left: (node.position_x - layout.min_x) + GRAPH_PADDING,
           top: (node.position_y - layout.min_y) + GRAPH_PADDING,
           width,
           height,
-          backgroundColor: theme.background,
-          borderWidth: 2,
-          borderColor: theme.border,
-          elevation: 4,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
+          backgroundColor: theme.background + 'FF',
+          borderWidth: pressed ? 3 : 2,
+          borderColor: pressed ? theme.text : theme.border,
+          elevation: pressed ? 8 : 4,
+          shadowColor: theme.border,
+          shadowOffset: { width: 0, height: pressed ? 4 : 2 },
+          shadowOpacity: pressed ? 0.3 : 0.1,
+          shadowRadius: pressed ? 8 : 4,
+          transform: [
+            { scale: pressed ? 0.95 : 1 },
+            { translateY: pressed ? 1 : 0 }
+          ],
+          backfaceVisibility: 'hidden',
+          overflow: 'hidden',
         },
+        styles.nodeStatus[node.status],
+        pressed && styles.pressed,
       ]}
+      android_ripple={{ 
+        color: theme.text + '20',  // 테마 색상에 20% 투명도
+        borderless: false,
+        foreground: true
+      }}
       onPress={() => onPress(node)}
     >
       <View style={styles.statusIconContainer}>
@@ -72,6 +85,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 2,
+    backfaceVisibility: 'hidden',
+    overflow: 'hidden',
+  },
+  pressed: {
+    opacity: 0.95,
   },
   text: {
     fontSize: 13,
@@ -83,4 +101,15 @@ const styles = StyleSheet.create({
     top: 8,
     right: 8,
   },
+  nodeStatus: {
+    locked: {
+      opacity: 1,
+    },
+    completed: {
+      opacity: 1,
+    },
+    in_progress: {
+      opacity: 1,
+    },
+  } as const,
 });
