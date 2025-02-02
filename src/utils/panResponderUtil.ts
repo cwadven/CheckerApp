@@ -82,9 +82,9 @@ export const createMapPanResponder = ({
           return;
         }
 
-        // 스케일 계산
+        // 스케일 계산 - 최소값을 0.2로 수정 (더 멀리 줌아웃 가능)
         const scaleFactor = distance / lastDistance.current;
-        const newScale = Math.min(Math.max(scale._value * scaleFactor, 0.5), 3);
+        const newScale = Math.min(Math.max(scale._value * scaleFactor, 0.2), 3);
         
         // 핀치 제스처의 이동 거리 계산
         const pinchDeltaX = currentFocalPoint.x - lastFocalPoint.x;
