@@ -89,7 +89,8 @@ const VARIANT_STYLES: Record<"completed" | "in_progress", VariantStyles> = {
   },
 };
 
-const BACKGROUND_IMAGE_HEIGHT = 160;
+const BACKGROUND_IMAGE_HEIGHT = 140;
+const CONTENT_OVERLAP = 50;
 const CONTENT_PADDING = 16;
 
 export const NodeContentModal: React.FC<NodeContentModalProps> = ({
@@ -339,10 +340,15 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
                       backgroundColor: 'white',
                       borderTopLeftRadius: 20,
                       borderTopRightRadius: 20,
-                      marginTop: BACKGROUND_IMAGE_HEIGHT - 20,
+                      marginTop: BACKGROUND_IMAGE_HEIGHT - CONTENT_OVERLAP,
                     } : null
                   ]}
-                  contentContainerStyle={styles.contentContainer}
+                  contentContainerStyle={[
+                    styles.contentContainer,
+                    {
+                      paddingTop: node.background_image ? 4 : 16
+                    }
+                  ]}
                 >
                   <View style={styles.section}>
                     <View style={styles.statusSection}>
@@ -487,7 +493,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 160,
+    height: BACKGROUND_IMAGE_HEIGHT,
   },
   content: {
     flex: 1,
