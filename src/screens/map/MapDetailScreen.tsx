@@ -14,7 +14,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import type { RootStackScreenProps } from "../../types/navigation";
 import { mapService } from "../../api/services/mapService";
-import type { Map } from "../../types/map";
+import type { Map, Play, PlaysResponse } from "../../types/map";
 import { apiClient } from "../../api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AlertModal } from "../../components/common/AlertModal";
@@ -49,6 +49,8 @@ export const MapDetailScreen = () => {
     message: '',
     onConfirm: () => {},
   });
+  const [plays, setPlays] = useState<Play[]>([]);
+  const [isLoadingPlays, setIsLoadingPlays] = useState(false);
 
   const loadMapDetail = async () => {
     try {
@@ -130,6 +132,20 @@ export const MapDetailScreen = () => {
     }
   };
 
+  const loadPlays = async () => {
+    if (!map?.is_subscribed) return;
+    
+    try {
+      setIsLoadingPlays(true);
+      const response = await apiClient.get<PlaysResponse>(`/v1/play/map/${mapId}`);
+      setPlays(response.data.plays);
+    } catch (error) {
+      console.error("Failed to load plays:", error);
+    } finally {
+      setIsLoadingPlays(false);
+    }
+  };
+
   useEffect(() => {
     loadMapDetail();
   }, [mapId]);
@@ -174,6 +190,12 @@ export const MapDetailScreen = () => {
       eventEmitter.off(MAP_EVENTS.NODE_COMPLETED, handleNodeCompleted);
     };
   }, [mapId]);
+
+  useEffect(() => {
+    if (map?.is_subscribed) {
+      loadPlays();
+    }
+  }, [map?.is_subscribed]);
 
   const handleStartMap = () => {
     if (!map) return;
@@ -303,15 +325,63 @@ export const MapDetailScreen = () => {
                 )}
               </View>
             )}
+
+            {map.is_subscribed && (
+              <View style={styles.playsSection}>
+                <Text style={styles.sectionTitle}>참여 중인 플레이</Text>
+                
+                {isLoadingPlays ? (
+                  <ActivityIndicator size="small" color="#4CAF50" style={styles.playsLoader} />
+                ) : plays.length > 0 ? (
+                  <>
+                    <View style={styles.playsList}>
+                      {plays.map((play, index) => (
+                        <View key={index} style={styles.playItem}>
+                          <View style={styles.playInfo}>
+                            <Text style={styles.playTitle}>{play.title}</Text>
+                            <Text style={styles.playDate}>
+                              {new Date(play.joined_at).toLocaleDateString('ko-KR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}부터 참여 중
+                            </Text>
+                          </View>
+                          <View style={styles.roleTag}>
+                            <Text style={styles.roleText}>
+                              {play.role === 'admin' ? '관리자' : '참여자'}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                    <Pressable
+                      style={styles.newPlayButton}
+                      onPress={() => navigation.navigate("CreatePlay", { mapId: map.id })}
+                    >
+                      <Text style={styles.newPlayButtonText}>새로운 플레이 시작하기</Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <View style={styles.emptyPlays}>
+                    <Text style={styles.emptyPlaysText}>
+                      아직 참여 중인 플레이가 없습니다.
+                    </Text>
+                    <Pressable
+                      style={styles.newPlayButton}
+                      onPress={() => navigation.navigate("CreatePlay", { mapId: map.id })}
+                    >
+                      <Text style={styles.newPlayButtonText}>새로운 플레이 시작하기</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
         </ScrollView>
 
         <View style={styles.buttonContainer}>
-          {map.is_subscribed ? (
-            <Pressable style={styles.startButton} onPress={handleStartMap}>
-              <Text style={styles.startButtonText}>시작하기</Text>
-            </Pressable>
-          ) : (
+          {!map.is_subscribed && (
             <View style={styles.buttonRow}>
               <Pressable
                 style={[
@@ -483,13 +553,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#4CAF50",
   },
-  startButton: {
-    height: 48,
-    backgroundColor: "#4CAF50",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   subscribeButtonText: {
     color: "white",
     fontSize: 16,
@@ -497,11 +560,6 @@ const styles = StyleSheet.create({
   },
   previewButtonText: {
     color: "#4CAF50",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  startButtonText: {
-    color: "white",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -556,5 +614,72 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     padding: 8,
+  },
+  playsSection: {
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  playsList: {
+    marginTop: 12,
+    gap: 12,
+  },
+  playItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  playInfo: {
+    flex: 1,
+  },
+  playTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  playDate: {
+    fontSize: 13,
+    color: '#666',
+  },
+  roleTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    marginLeft: 12,
+  },
+  roleText: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '500',
+  },
+  playsLoader: {
+    marginTop: 20,
+  },
+  emptyPlays: {
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  emptyPlaysText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  newPlayButton: {
+    backgroundColor: '#4CAF50',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  newPlayButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

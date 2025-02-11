@@ -75,3 +75,16 @@ interface NodeTheme {
   text: string;
   icon: string;
 }
+
+export interface Play {
+  title: string;
+  role: 'participant' | 'admin';
+  joined_at: string;
+}
+
+export interface PlaysResponse {
+  status_code: string;
+  data: {
+    plays: Play[];
+  };
+}
