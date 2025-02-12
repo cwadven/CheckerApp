@@ -77,6 +77,7 @@ interface NodeTheme {
 }
 
 export interface Play {
+  id: number;
   title: string;
   role: 'participant' | 'admin';
   joined_at: string;

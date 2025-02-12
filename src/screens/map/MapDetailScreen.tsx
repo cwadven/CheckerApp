@@ -354,8 +354,8 @@ export const MapDetailScreen = () => {
                 ) : plays.length > 0 ? (
                   <>
                     <View style={styles.playsList}>
-                      {plays.map((play, index) => (
-                        <View key={index} style={styles.playItem}>
+                      {plays.map((play) => (
+                        <View key={play.id} style={styles.playItem}>
                           <View style={styles.playInfo}>
                             <Text style={styles.playTitle}>{play.title}</Text>
                             <Text style={styles.playDate}>
@@ -366,10 +366,22 @@ export const MapDetailScreen = () => {
                               })}부터 참여 중
                             </Text>
                           </View>
-                          <View style={styles.roleTag}>
-                            <Text style={styles.roleText}>
-                              {play.role === 'admin' ? '관리자' : '참여자'}
-                            </Text>
+                          <View style={styles.playActions}>
+                            <View style={styles.roleTag}>
+                              <Text style={styles.roleText}>
+                                {play.role === 'admin' ? '관리자' : '참여자'}
+                              </Text>
+                            </View>
+                            <Pressable 
+                              style={styles.startButton}
+                              onPress={() => navigation.navigate("MapGraphLoading", { 
+                                mapId: map.id,
+                                playId: play.id,  // 플레이 ID 전달
+                                mode: 'play'      // 모드 구분을 위한 파라미터
+                              })}
+                            >
+                              <Text style={styles.startButtonText}>시작</Text>
+                            </Pressable>
                           </View>
                         </View>
                       ))}
@@ -668,6 +680,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
   },
+  playActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   roleTag: {
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -706,5 +723,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  startButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  startButtonText: {
+    color: 'white',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

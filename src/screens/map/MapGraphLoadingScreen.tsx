@@ -12,10 +12,17 @@ interface LoadingStepTextProps {
   text: string;
 }
 
+interface RouteParams {
+  mapId: number;
+  playId?: number;  // 플레이 ID (옵셔널)
+  mode?: 'preview' | 'play';  // 모드 구분
+}
+
 export const MapGraphLoadingScreen = ({
   route,
   navigation,
 }: RootStackScreenProps<"MapGraphLoading">) => {
+  const { mapId, playId, mode = 'preview' } = route.params as RouteParams;
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [graphData, setGraphData] = useState<{
@@ -33,35 +40,40 @@ export const MapGraphLoadingScreen = ({
   useEffect(() => {
     const loadGraphData = async () => {
       try {
-        // 1. 메타데이터 로딩 (25%)
         setLoadingProgress(10);
-        const metaResponse = await mapGraphService.getMeta(route.params.mapId);
-        const meta = metaResponse.data;
-        console.log("Meta data loaded:", meta);
+        
+        // URL 구성 함수
+        const getUrl = (base: string) => {
+          if (mode === 'play' && playId) {
+            return `${base}/${mapId}/member_play/${playId}`;
+          }
+          return `${base}/${mapId}`;
+        };
 
-        // 2. 노드 데이터 로딩 (50%)
+        // 메타데이터 로딩
+        const metaResponse = await mapGraphService.getMeta(
+          getUrl('/v1/map-graph/meta')
+        );
+        const meta = metaResponse.data;
+
+        // 노드 데이터 로딩
         setLoadingProgress(40);
         const nodesResponse = await mapGraphService.getNodes(
-          route.params.mapId
+          getUrl('/v1/map-graph/node')
         );
         const nodes = nodesResponse.data.nodes;
-        console.log("Nodes loaded:", nodes);
 
-        // 3. 엣지 데이터 로딩 (75%)
+        // 엣지 데이터 로딩
         setLoadingProgress(70);
         const arrowsResponse = await mapGraphService.getArrows(
-          route.params.mapId
+          getUrl('/v1/map-graph/arrow')
         );
         const arrows = arrowsResponse.data.arrows;
-        console.log("Arrows loaded:", arrows);
 
-        // 4. ActiveRule 데이터 로딩 (90%)
+        // ActiveRule 데이터 로딩 (기존 URL 유지)
         setLoadingProgress(90);
-        const rulesResponse = await mapGraphService.getActiveRules(
-          route.params.mapId
-        );
+        const rulesResponse = await mapGraphService.getActiveRules(mapId);
         const activeRules = rulesResponse.data.node_complete_rules;
-        console.log("ActiveRules loaded:", activeRules);
 
         // 모든 데이터가 준비되었는지 확인
         if (
@@ -102,7 +114,7 @@ export const MapGraphLoadingScreen = ({
     };
 
     loadGraphData();
-  }, [navigation, route.params.mapId]);
+  }, [navigation, mapId, playId, mode]);
 
   return (
     <View style={styles.loadingContainer}>
