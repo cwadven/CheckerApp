@@ -22,6 +22,7 @@ import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
 import { AUTH_EVENTS } from "../../utils/eventEmitter";
 import { ApiError } from "../../api/client";
 import type { NodeCompletedEvent } from "../../utils/eventEmitter";
+import { CreatePlayModal } from '../../components/play/CreatePlayModal';
 
 type RouteProps = RootStackScreenProps<"MapDetail">;
 
@@ -51,6 +52,8 @@ export const MapDetailScreen = () => {
   });
   const [plays, setPlays] = useState<Play[]>([]);
   const [isLoadingPlays, setIsLoadingPlays] = useState(false);
+  const [isCreatePlayModalVisible, setCreatePlayModalVisible] = useState(false);
+  const [isCreatingPlay, setIsCreatingPlay] = useState(false);
 
   const loadMapDetail = async () => {
     try {
@@ -207,6 +210,22 @@ export const MapDetailScreen = () => {
     navigation.navigate("MapGraphLoading", { mapId: map.id });
   };
 
+  const handleCreatePlay = async (title: string) => {
+    try {
+      setIsCreatingPlay(true);
+      await apiClient.post(`/v1/play/map/${mapId}`, { title });
+      
+      // 성공 시 플레이 목록 다시 로드
+      await loadPlays();
+      setCreatePlayModalVisible(false);
+    } catch (error) {
+      console.error('Failed to create play:', error);
+      throw error;
+    } finally {
+      setIsCreatingPlay(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
@@ -357,7 +376,7 @@ export const MapDetailScreen = () => {
                     </View>
                     <Pressable
                       style={styles.newPlayButton}
-                      onPress={() => navigation.navigate("CreatePlay", { mapId: map.id })}
+                      onPress={() => setCreatePlayModalVisible(true)}
                     >
                       <Text style={styles.newPlayButtonText}>새로운 플레이 시작하기</Text>
                     </Pressable>
@@ -369,7 +388,7 @@ export const MapDetailScreen = () => {
                     </Text>
                     <Pressable
                       style={styles.newPlayButton}
-                      onPress={() => navigation.navigate("CreatePlay", { mapId: map.id })}
+                      onPress={() => setCreatePlayModalVisible(true)}
                     >
                       <Text style={styles.newPlayButtonText}>새로운 플레이 시작하기</Text>
                     </Pressable>
@@ -431,6 +450,12 @@ export const MapDetailScreen = () => {
           </View>
         </View>
       </Modal>
+      <CreatePlayModal
+        visible={isCreatePlayModalVisible}
+        onClose={() => setCreatePlayModalVisible(false)}
+        onSubmit={handleCreatePlay}
+        isLoading={isCreatingPlay}
+      />
     </SafeAreaView>
   );
 };
