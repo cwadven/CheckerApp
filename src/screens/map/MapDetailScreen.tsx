@@ -392,12 +392,14 @@ export const MapDetailScreen = () => {
                         </View>
                       ))}
                     </View>
-                    <Pressable
-                      style={styles.newPlayButton}
-                      onPress={() => setCreatePlayModalVisible(true)}
-                    >
-                      <Text style={styles.newPlayButtonText}>새로운 플레이 시작하기</Text>
-                    </Pressable>
+                    {mapPlayMembers.length < 3 && (  // 3개 미만일 때만 버튼 표시
+                      <Pressable
+                        style={styles.newPlayButton}
+                        onPress={() => setCreatePlayModalVisible(true)}
+                      >
+                        <Text style={styles.newPlayButtonText}>새로운 플레이 시작하기</Text>
+                      </Pressable>
+                    )}
                   </>
                 ) : (
                   <View style={styles.emptyPlays}>
