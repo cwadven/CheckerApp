@@ -222,7 +222,11 @@ export const MapDetailScreen = () => {
       setCreatePlayModalVisible(false);
     } catch (error) {
       console.error('Failed to create play:', error);
-      throw error;
+      if (error instanceof ApiError) {
+        // API 에러 메시지를 그대로 전달
+        throw new Error(error.message);
+      }
+      throw new Error('플레이 생성에 실패했습니다.');
     } finally {
       setIsCreatingPlay(false);
     }

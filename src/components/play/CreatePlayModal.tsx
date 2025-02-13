@@ -40,7 +40,7 @@ export const CreatePlayModal = ({
       setTitle('');
       setError('');
     } catch (error) {
-      setError('플레이 생성에 실패했습니다.');
+      setError(error instanceof Error ? error.message : '플레이 생성에 실패했습니다.');
     }
   };
 
