@@ -14,15 +14,15 @@ interface LoadingStepTextProps {
 
 interface RouteParams {
   mapId: number;
-  playId?: number;  // 플레이 ID (옵셔널)
-  mode?: 'preview' | 'play';  // 모드 구분
+  mapPlayMemberId?: number;  // playId를 mapPlayMemberId로 변경
+  mode?: 'preview' | 'play';
 }
 
 export const MapGraphLoadingScreen = ({
   route,
   navigation,
 }: RootStackScreenProps<"MapGraphLoading">) => {
-  const { mapId, playId, mode = 'preview' } = route.params as RouteParams;
+  const { mapId, mapPlayMemberId, mode = 'preview' } = route.params as RouteParams;
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [graphData, setGraphData] = useState<{
@@ -44,8 +44,8 @@ export const MapGraphLoadingScreen = ({
         
         // URL 구성 함수
         const getUrl = (base: string) => {
-          if (mode === 'play' && playId) {
-            return `${base}/${mapId}/member_play/${playId}`;
+          if (mode === 'play' && mapPlayMemberId) {
+            return `${base}/${mapId}/member_play/${mapPlayMemberId}`;
           }
           return `${base}/${mapId}`;
         };
@@ -102,6 +102,7 @@ export const MapGraphLoadingScreen = ({
         navigation.replace("MapGraph", {
           mapId: route.params.mapId,
           graphData,
+          mapPlayMemberId: route.params.mapPlayMemberId,
         });
       } catch (err) {
         console.error("Error loading graph data:", err);
@@ -114,7 +115,7 @@ export const MapGraphLoadingScreen = ({
     };
 
     loadGraphData();
-  }, [navigation, mapId, playId, mode]);
+  }, [navigation, mapId, mapPlayMemberId, mode]);
 
   return (
     <View style={styles.loadingContainer}>

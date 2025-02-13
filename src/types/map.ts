@@ -76,16 +76,16 @@ interface NodeTheme {
   icon: string;
 }
 
-export interface Play {
+export interface MapPlayMember {
   id: number;
   title: string;
   role: 'participant' | 'admin';
   joined_at: string;
 }
 
-export interface PlaysResponse {
+export interface MapPlayMembersResponse {
   status_code: string;
   data: {
-    plays: Play[];
+    plays: MapPlayMember[];
   };
 }

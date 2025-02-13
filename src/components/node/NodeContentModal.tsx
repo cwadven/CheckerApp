@@ -32,6 +32,7 @@ interface NodeContentModalProps {
   isLoading?: boolean;
   onRefreshNode: (nodeId: number) => Promise<void>;
   onAnswerSubmit: (response: AnswerSubmitResponse) => void;
+  mapPlayMemberId?: number;
 }
 
 interface VariantStyles {
@@ -102,6 +103,7 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
   isLoading = false,
   onRefreshNode,
   onAnswerSubmit,
+  mapPlayMemberId,
 }) => {
   const [expandedRuleId, setExpandedRuleId] = useState<number | null>(null);
   const [expandedTargetIds, setExpandedTargetIds] = useState<number[]>([]);
@@ -436,6 +438,7 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
           question_files: selectedQuestion?.question_files || [],
         }}
         onSubmit={handleSubmitAnswer}
+        mapPlayMemberId={mapPlayMemberId}
       />
     </View>
   );

@@ -6,7 +6,8 @@ import { MapArrows } from "../../components/map/MapArrows";
 import { MapNode } from "../../components/map/MapNode";
 import { MapHeader } from "../../components/map/MapHeader";
 import { NodeDetailModal } from "../../components/node/NodeDetailModal";
-import type { Node, Arrow } from "../../types/graph";
+import type { Node, Arrow, ActiveRule } from "../../types/graph";
+import type { MapGraphMeta } from "../../types/map";
 import type { AnswerSubmitResponse } from '../../types/answer';
 import { DEFAULT_NODE_SIZE } from "../../components/map/MapNode";
 import { GRAPH_PADDING } from "../../constants/layout";
@@ -23,11 +24,24 @@ interface ViewportState {
   lastUpdated: number;
 }
 
+interface RouteParams {
+  mapId: number;
+  graphData: {
+    meta: MapGraphMeta;
+    nodes: Node[];
+    arrows: Arrow[];
+    activeRules: ActiveRule[];
+  };
+  mapPlayMemberId?: number;
+}
+
 export const MapGraphScreen = ({
   route,
   navigation,
 }: RootStackScreenProps<"MapGraph">) => {
-  const { mapId, graphData } = route.params;
+  const params = route.params as RouteParams;
+  const { mapId, graphData, mapPlayMemberId } = params;
+  console.log("ddd", mapId, graphData, mapPlayMemberId);
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [nodes, setNodes] = useState<Node[]>(graphData.nodes);
   const [arrows, setArrows] = useState<Arrow[]>(graphData.arrows);
@@ -290,6 +304,7 @@ export const MapGraphScreen = ({
         onMoveToNode={moveToNode}
         onAnswerSubmit={handleAnswerSubmit}
         onError={handleNodeDetailError}
+        mapPlayMemberId={mapPlayMemberId}
       />
 
       <Modal 

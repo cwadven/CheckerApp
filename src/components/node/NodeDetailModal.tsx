@@ -9,9 +9,10 @@ interface NodeDetailModalProps {
   visible: boolean;
   nodeId: number | null;
   onClose: () => void;
-  onMoveToNode: (nodeId: number) => void;
+  onMoveToNode?: (nodeId: number) => void;
   onAnswerSubmit: (response: AnswerSubmitResponse) => void;
   onError: (error: unknown) => void;
+  mapPlayMemberId?: number;
 }
 
 export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
@@ -21,6 +22,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
   onMoveToNode,
   onAnswerSubmit,
   onError,
+  mapPlayMemberId,
 }) => {
   const [node, setNode] = useState<NodeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +52,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
   const handleMoveToNode = async (targetNodeId: number) => {
     try {
       setIsLoading(true);
-      onMoveToNode(targetNodeId);
+      onMoveToNode?.(targetNodeId);
       const response = await nodeService.getNodeDetail(targetNodeId);
       setNode(response.data);
     } catch (error) {
@@ -90,6 +92,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
       isLoading={isLoading}
       onRefreshNode={refreshNodeDetail}
       onAnswerSubmit={onAnswerSubmit}
+      mapPlayMemberId={mapPlayMemberId}
     />
   );
 };

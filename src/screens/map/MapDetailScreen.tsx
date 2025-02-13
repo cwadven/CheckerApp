@@ -11,10 +11,12 @@ import {
   Modal,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "../../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
 import type { RootStackScreenProps } from "../../types/navigation";
 import { mapService } from "../../api/services/mapService";
-import type { Map, Play, PlaysResponse } from "../../types/map";
+import type { Map, MapPlayMember, MapPlayMembersResponse } from "../../types/map";
 import { apiClient } from "../../api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AlertModal } from "../../components/common/AlertModal";
@@ -28,7 +30,7 @@ type RouteProps = RootStackScreenProps<"MapDetail">;
 
 export const MapDetailScreen = () => {
   const route = useRoute<RouteProps["route"]>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { mapId } = route.params;
 
   const [map, setMap] = useState<Map | null>(null);
@@ -50,8 +52,8 @@ export const MapDetailScreen = () => {
     message: '',
     onConfirm: () => {},
   });
-  const [plays, setPlays] = useState<Play[]>([]);
-  const [isLoadingPlays, setIsLoadingPlays] = useState(false);
+  const [mapPlayMembers, setMapPlayMembers] = useState<MapPlayMember[]>([]);
+  const [isLoadingMapPlayMembers, setIsLoadingMapPlayMembers] = useState(false);
   const [isCreatePlayModalVisible, setCreatePlayModalVisible] = useState(false);
   const [isCreatingPlay, setIsCreatingPlay] = useState(false);
 
@@ -135,17 +137,17 @@ export const MapDetailScreen = () => {
     }
   };
 
-  const loadPlays = async () => {
+  const loadMapPlayMembers = async () => {
     if (!map?.is_subscribed) return;
     
     try {
-      setIsLoadingPlays(true);
-      const response = await apiClient.get<PlaysResponse>(`/v1/play/map/${mapId}`);
-      setPlays(response.data.plays);
+      setIsLoadingMapPlayMembers(true);
+      const response = await apiClient.get<MapPlayMembersResponse>(`/v1/play/map/${mapId}`);
+      setMapPlayMembers(response.data.plays);
     } catch (error) {
-      console.error("Failed to load plays:", error);
+      console.error("Failed to load map play members:", error);
     } finally {
-      setIsLoadingPlays(false);
+      setIsLoadingMapPlayMembers(false);
     }
   };
 
@@ -196,7 +198,7 @@ export const MapDetailScreen = () => {
 
   useEffect(() => {
     if (map?.is_subscribed) {
-      loadPlays();
+      loadMapPlayMembers();
     }
   }, [map?.is_subscribed]);
 
@@ -216,7 +218,7 @@ export const MapDetailScreen = () => {
       await apiClient.post(`/v1/play/map/${mapId}`, { title });
       
       // 성공 시 플레이 목록 다시 로드
-      await loadPlays();
+      await loadMapPlayMembers();
       setCreatePlayModalVisible(false);
     } catch (error) {
       console.error('Failed to create play:', error);
@@ -349,12 +351,12 @@ export const MapDetailScreen = () => {
               <View style={styles.playsSection}>
                 <Text style={styles.sectionTitle}>참여 중인 플레이</Text>
                 
-                {isLoadingPlays ? (
+                {isLoadingMapPlayMembers ? (
                   <ActivityIndicator size="small" color="#4CAF50" style={styles.playsLoader} />
-                ) : plays.length > 0 ? (
+                ) : mapPlayMembers.length > 0 ? (
                   <>
                     <View style={styles.playsList}>
-                      {plays.map((play) => (
+                      {mapPlayMembers.map((play) => (
                         <View key={play.id} style={styles.playItem}>
                           <View style={styles.playInfo}>
                             <Text style={styles.playTitle}>{play.title}</Text>
@@ -376,8 +378,8 @@ export const MapDetailScreen = () => {
                               style={styles.startButton}
                               onPress={() => navigation.navigate("MapGraphLoading", { 
                                 mapId: map.id,
-                                playId: play.id,  // 플레이 ID 전달
-                                mode: 'play'      // 모드 구분을 위한 파라미터
+                                mapPlayMemberId: play.id,  // playId를 mapPlayMemberId로 변경
+                                mode: 'play'
                               })}
                             >
                               <Text style={styles.startButtonText}>시작</Text>

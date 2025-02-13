@@ -27,6 +27,11 @@ export type RootStackParamList = {
   Main: {
     screen?: string;
   };
+  MapGraphLoading: {
+    mapId: number;
+    mapPlayMemberId?: number;
+    mode?: 'preview' | 'play';
+  };
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

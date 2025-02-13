@@ -47,6 +47,7 @@ interface AnswerSubmitModalProps {
   onClose: () => void;
   question: Question;
   onSubmit: (response: AnswerSubmitResponse) => void;
+  mapPlayMemberId?: number;
 }
 
 interface ApiError {
@@ -82,6 +83,7 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
   onClose,
   question,
   onSubmit,
+  mapPlayMemberId,
 }) => {
   const [answer, setAnswer] = useState('');
   const [files, setFiles] = useState<EnhancedDocumentPickerAsset[]>([]);
@@ -195,6 +197,7 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
 
       response = await answerSubmitService.submitAnswer(
         question.id,
+        mapPlayMemberId,
         question.answer_submit_with_text ? answer : null,
         question.answer_submit_with_file ? files : null
       );

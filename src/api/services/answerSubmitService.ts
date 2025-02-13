@@ -6,10 +6,11 @@ import type { AnswerSubmitResponse } from '../../types/answer';
 export const answerSubmitService = {
   submitAnswer: async (
     questionId: number,
+    mapPlayMemberId: number | undefined,
     answer: string | null,
     files: DocumentPickerAsset[] | null
   ): Promise<AnswerSubmitResponse> => {
-    console.log('Submitting answer:', { questionId, answer, files });
+    console.log('Submitting answer:', { questionId, mapPlayMemberId, answer, files });
 
     const formData = new FormData();
 
@@ -37,8 +38,12 @@ export const answerSubmitService = {
       }
     }
 
+    const url = mapPlayMemberId 
+      ? `/v1/question/${questionId}/answer/${mapPlayMemberId}/submit`
+      : `/v1/question/${questionId}/answer/submit`;
+
     return apiClient.post<AnswerSubmitResponse>(
-      `/v1/question/${questionId}/answer/submit`,
+      url,
       formData,
       {
         headers: {
