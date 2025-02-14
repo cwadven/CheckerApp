@@ -176,7 +176,8 @@ export const MapDetailScreen = () => {
                 {
                   id: event.nodeId,
                   name: event.name || '',
-                  activated_at: event.completedAt
+                  activated_at: event.completedAt,
+                  map_play_title: event.mapPlayTitle || ''
                 },
                 ...progress.recent_activated_nodes.slice(0, 2)
               ],
@@ -334,15 +335,20 @@ export const MapDetailScreen = () => {
                           <Text style={styles.recentNodeTitle} numberOfLines={1}>
                             {node.name}
                           </Text>
-                          <Text style={styles.recentNodeDate}>
-                            {new Date(node.activated_at).toLocaleString('ko-KR', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: 'numeric',
-                              hour12: true
-                            })}
-                          </Text>
+                          <View style={styles.recentNodeInfo}>
+                            <Text style={styles.recentNodeDate}>
+                              {new Date(node.activated_at).toLocaleString('ko-KR', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: 'numeric',
+                                hour12: true
+                              })}
+                            </Text>
+                            <Text style={styles.recentNodePlayTitle}>
+                              • {node.map_play_title}
+                            </Text>
+                          </View>
                         </View>
                       ))}
                     </View>
@@ -651,9 +657,19 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 4,
   },
+  recentNodeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   recentNodeDate: {
     fontSize: 12,
     color: '#666',
+  },
+  recentNodePlayTitle: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '500',
   },
   settingsButton: {
     position: 'absolute',

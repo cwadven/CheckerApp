@@ -21,6 +21,7 @@ export interface Map {
       id: number;
       name: string;
       activated_at: string;
+      map_play_title: string;
     }[];
   };
 }
