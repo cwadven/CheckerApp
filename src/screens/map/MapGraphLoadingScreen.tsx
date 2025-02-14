@@ -46,7 +46,7 @@ export const MapGraphLoadingScreen = ({
         // URL 구성 함수
         const getUrl = (base: string) => {
           if (mode === 'play' && mapPlayMemberId) {
-            return `${base}/${mapId}/member_play/${mapPlayMemberId}`;
+            return `${base}/${mapId}/member-play/${mapPlayMemberId}`;
           }
           return `${base}/${mapId}`;
         };

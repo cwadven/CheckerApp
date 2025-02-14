@@ -26,28 +26,36 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
 }) => {
   const [node, setNode] = useState<NodeDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<unknown | null>(null);
+
+  const getNodeDetail = useCallback(async () => {
+    if (!nodeId) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const url = mapPlayMemberId 
+        ? `/v1/node/${nodeId}/member-play/${mapPlayMemberId}`
+        : `/v1/node/${nodeId}`;
+
+      const response = await nodeService.getNodeDetail(url);
+      setNode(response.data);
+    } catch (error) {
+      console.error('Failed to fetch node details:', error);
+      onError?.(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [nodeId, mapPlayMemberId, onError]);
 
   useEffect(() => {
-    const fetchNodeDetail = async () => {
-      if (nodeId === null) return;
-
-      try {
-        setIsLoading(true);
-        const response = await nodeService.getNodeDetail(nodeId);
-        setNode(response.data);
-      } catch (error) {
-        onError(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (visible && nodeId !== null) {
-      fetchNodeDetail();
+      getNodeDetail();
     } else {
       setNode(null);
     }
-  }, [visible, nodeId, onError]);
+  }, [visible, nodeId, getNodeDetail]);
 
   const handleMoveToNode = async (targetNodeId: number) => {
     try {
