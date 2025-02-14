@@ -115,9 +115,6 @@ export const NodeContentModal: React.FC<NodeContentModalProps> = ({
 
   // 초기화 로직
   React.useEffect(() => {
-    setExpandedTargetIds([]);
-    setExpandedRuleId(null);
-
     Object.keys(animatedHeights).forEach((key) => {
       animatedHeights[key].setValue(0);
     });
