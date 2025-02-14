@@ -156,7 +156,7 @@ export const MapGraphScreen = ({
                 nodeId: node.id,
                 name: node.name,
                 completedAt: new Date().toISOString(),
-                mapPlayTitle: graphData.meta.map_play_title
+                mapPlayTitle: mapPlayMemberTitle
               });
               return { ...node, status: 'completed' };
             }
