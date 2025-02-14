@@ -34,12 +34,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
     try {
       setIsLoading(true);
       setError(null);
-
-      const url = mapPlayMemberId 
-        ? `/v1/node/${nodeId}/member-play/${mapPlayMemberId}`
-        : `/v1/node/${nodeId}`;
-
-      const response = await nodeService.getNodeDetail(url);
+      const response = await nodeService.getNodeDetail(nodeId, mapPlayMemberId);
       setNode(response.data);
     } catch (error) {
       console.error('Failed to fetch node details:', error);
@@ -61,7 +56,7 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
     try {
       setIsLoading(true);
       onMoveToNode?.(targetNodeId);
-      const response = await nodeService.getNodeDetail(targetNodeId);
+      const response = await nodeService.getNodeDetail(targetNodeId, mapPlayMemberId);
       setNode(response.data);
     } catch (error) {
       onError(error);
@@ -73,14 +68,14 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
   const refreshNodeDetail = useCallback(async (targetNodeId: number) => {
     try {
       setIsLoading(true);
-      const response = await nodeService.getNodeDetail(targetNodeId);
+      const response = await nodeService.getNodeDetail(targetNodeId, mapPlayMemberId);
       setNode(response.data);
     } catch (error) {
       onError(error);
     } finally {
       setIsLoading(false);
     }
-  }, [onError]);
+  }, [mapPlayMemberId, onError]);
 
   if (!node) return null;
 
