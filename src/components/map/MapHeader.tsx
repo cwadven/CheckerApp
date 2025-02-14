@@ -5,17 +5,22 @@ import type { MapGraphMeta } from "../../types/map";
 
 interface MapHeaderProps {
   mapMeta: MapGraphMeta;
+  title: string;
+  subtitle?: string;
   onBack: () => void;
 }
 
-export const MapHeader = ({ mapMeta, onBack }: MapHeaderProps) => {
+export const MapHeader = ({ mapMeta, title, subtitle, onBack }: MapHeaderProps) => {
   return (
     <View style={styles.header}>
       <View style={styles.titleRow}>
         <Pressable onPress={onBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </Pressable>
-        <Text style={styles.title}>{mapMeta.title}</Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        </View>
       </View>
       <View style={styles.stats}>
         <View style={styles.statItem}>
@@ -67,10 +72,13 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginLeft: -8,
   },
+  titleContainer: {
+    flexDirection: "column",
+    flex: 1,
+  },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    flex: 1,
   },
   stats: {
     flexDirection: "row",
@@ -84,5 +92,10 @@ const styles = StyleSheet.create({
   statText: {
     fontSize: 14,
     color: "#666",
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
   },
 });

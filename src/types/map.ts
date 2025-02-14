@@ -68,6 +68,7 @@ export interface MapGraphMeta {
     };
   };
   version: string;
+  map_play_title?: string;
 }
 
 interface NodeTheme {

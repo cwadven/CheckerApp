@@ -388,7 +388,8 @@ export const MapDetailScreen = () => {
                               style={styles.startButton}
                               onPress={() => navigation.navigate("MapGraphLoading", { 
                                 mapId: map.id,
-                                mapPlayMemberId: play.id,  // playId를 mapPlayMemberId로 변경
+                                mapPlayMemberId: play.id,
+                                mapPlayMemberTitle: play.title,
                                 mode: 'play'
                               })}
                             >

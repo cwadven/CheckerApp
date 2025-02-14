@@ -30,6 +30,7 @@ export type RootStackParamList = {
   MapGraphLoading: {
     mapId: number;
     mapPlayMemberId?: number;
+    mapPlayMemberTitle?: string;
     mode?: 'preview' | 'play';
   };
 };

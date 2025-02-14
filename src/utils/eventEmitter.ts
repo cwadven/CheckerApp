@@ -41,8 +41,9 @@ export interface SubscriptionUpdatedEvent {
 export interface NodeCompletedEvent {
   mapId: number;
   nodeId: number;
-  completedAt: string;
   name?: string;
+  completedAt: string;
+  mapPlayTitle?: string;
 }
 
 type MapEvents = {

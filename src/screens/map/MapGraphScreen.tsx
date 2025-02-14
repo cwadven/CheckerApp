@@ -33,6 +33,7 @@ interface RouteParams {
     activeRules: ActiveRule[];
   };
   mapPlayMemberId?: number;
+  mapPlayMemberTitle?: string;
 }
 
 export const MapGraphScreen = ({
@@ -40,8 +41,7 @@ export const MapGraphScreen = ({
   navigation,
 }: RootStackScreenProps<"MapGraph">) => {
   const params = route.params as RouteParams;
-  const { mapId, graphData, mapPlayMemberId } = params;
-  console.log("ddd", mapId, graphData, mapPlayMemberId);
+  const { mapId, graphData, mapPlayMemberId, mapPlayMemberTitle } = params;
   const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
   const [nodes, setNodes] = useState<Node[]>(graphData.nodes);
   const [arrows, setArrows] = useState<Arrow[]>(graphData.arrows);
@@ -154,8 +154,9 @@ export const MapGraphScreen = ({
               eventEmitter.emit(MAP_EVENTS.NODE_COMPLETED, {
                 mapId,
                 nodeId: node.id,
+                name: node.name,
                 completedAt: new Date().toISOString(),
-                name: node.name
+                mapPlayTitle: graphData.meta.map_play_title
               });
               return { ...node, status: 'completed' };
             }
@@ -248,7 +249,12 @@ export const MapGraphScreen = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <MapHeader mapMeta={graphData.meta} onBack={() => navigation.goBack()} />
+      <MapHeader
+        mapMeta={graphData.meta}
+        title={graphData.meta.title}
+        subtitle={mapPlayMemberId && mapPlayMemberTitle ? `플레이: ${mapPlayMemberTitle}` : undefined}
+        onBack={() => navigation.goBack()}
+      />
 
       <View 
         style={styles.graphWrapper}

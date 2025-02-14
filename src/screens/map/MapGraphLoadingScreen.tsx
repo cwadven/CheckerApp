@@ -16,13 +16,14 @@ interface RouteParams {
   mapId: number;
   mapPlayMemberId?: number;  // playId를 mapPlayMemberId로 변경
   mode?: 'preview' | 'play';
+  mapPlayMemberTitle?: string;
 }
 
 export const MapGraphLoadingScreen = ({
   route,
   navigation,
 }: RootStackScreenProps<"MapGraphLoading">) => {
-  const { mapId, mapPlayMemberId, mode = 'preview' } = route.params as RouteParams;
+  const { mapId, mapPlayMemberId, mode = 'preview', mapPlayMemberTitle } = route.params as RouteParams;
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [graphData, setGraphData] = useState<{
@@ -103,6 +104,7 @@ export const MapGraphLoadingScreen = ({
           mapId: route.params.mapId,
           graphData,
           mapPlayMemberId: route.params.mapPlayMemberId,
+          mapPlayMemberTitle: route.params.mapPlayMemberTitle,
         });
       } catch (err) {
         console.error("Error loading graph data:", err);
@@ -115,7 +117,7 @@ export const MapGraphLoadingScreen = ({
     };
 
     loadGraphData();
-  }, [navigation, mapId, mapPlayMemberId, mode]);
+  }, [navigation, mapId, mapPlayMemberId, mode, mapPlayMemberTitle]);
 
   return (
     <View style={styles.loadingContainer}>
