@@ -44,6 +44,7 @@ export interface NodeCompletedEvent {
   name?: string;
   completedAt: string;
   mapPlayTitle?: string;
+  mapPlayMemberId: number;
 }
 
 type MapEvents = {

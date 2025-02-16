@@ -151,13 +151,7 @@ export const MapGraphScreen = ({
         setNodes(prevNodes => 
           prevNodes.map(node => {
             if (response.data.completed_node_ids.includes(node.id)) {
-              eventEmitter.emit(MAP_EVENTS.NODE_COMPLETED, {
-                mapId,
-                nodeId: node.id,
-                name: node.name,
-                completedAt: new Date().toISOString(),
-                mapPlayTitle: mapPlayMemberTitle
-              });
+              handleNodeCompleted(node.id, node.name);
               return { ...node, status: 'completed' };
             }
             if (response.data.going_to_in_progress_node_ids.includes(node.id)) {
@@ -192,6 +186,17 @@ export const MapGraphScreen = ({
       setSelectedNodeId(null);  // 에러 발생 시 모달 닫기
       console.error('Failed to fetch node details:', error);
     }
+  };
+
+  const handleNodeCompleted = (nodeId: number, name: string) => {
+    eventEmitter.emit(MAP_EVENTS.NODE_COMPLETED, {
+      mapId,
+      nodeId,
+      name,
+      completedAt: new Date().toISOString(),
+      mapPlayTitle: mapPlayMemberTitle,
+      mapPlayMemberId: mapPlayMemberId
+    });
   };
 
   const saveViewportState = useCallback(async () => {

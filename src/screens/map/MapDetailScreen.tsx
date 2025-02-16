@@ -97,30 +97,8 @@ export const MapDetailScreen = () => {
           subscriberCount: map?.subscriber_count ? map.subscriber_count + 1 : 1
         });
         
-        setAlertConfig({
-          visible: true,
-          title: "구독 완료",
-          message: "구독이 완료되었습니다. 지금 바로 시작해보세요!",
-          confirmText: "시작하기",
-          cancelText: "나중에",
-          showCancel: true,
-          onConfirm: () => {
-            setAlertConfig(prev => ({ ...prev, visible: false }));
-            handleStartMap();
-          },
-          onCancel: () => setAlertConfig(prev => ({ ...prev, visible: false }))
-        });
       } else if (response.status_code === 'login-required') {
-        setAlertConfig({
-          visible: true,
-          title: "로그인 필요",
-          message: response.message || "로그인이 필요합니다",
-          confirmText: "로그인",
-          onConfirm: () => {
-            eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, response.message);
-            setAlertConfig(prev => ({ ...prev, visible: false }));
-          }
-        });
+        eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, response.message);
       }
     } catch (error) {
       if (error instanceof ApiError) {
@@ -159,35 +137,26 @@ export const MapDetailScreen = () => {
   useEffect(() => {
     const handleNodeCompleted = (event: NodeCompletedEvent) => {
       if (event.mapId === mapId) {
-        setMap(prevMap => {
-          if (!prevMap) return null;
-          
-          const progress = prevMap.progress || {
-            recent_activated_nodes: [],
-            percentage: 0,
-            completed_node_count: 0,
-            total_node_count: 1  // 최소 1개
-          };
-
-          return {
-            ...prevMap,
-            progress: {
-              ...progress,
-              recent_activated_nodes: [
-                {
-                  id: event.nodeId,
-                  name: event.name || '',
-                  activated_at: event.completedAt,
-                  map_play_title: event.mapPlayTitle || ''
-                },
-                ...progress.recent_activated_nodes.slice(0, 2)
-              ],
-              percentage: Math.min(100, ((progress.completed_node_count + 1) / progress.total_node_count) * 100),
-              completed_node_count: progress.completed_node_count + 1,
-              total_node_count: progress.total_node_count
+        // 해당 플레이의 최근 활성화 노드 정보 업데이트
+        setMapPlayMembers(prevMembers => 
+          prevMembers.map(play => {
+            if (play.id === event.mapPlayMemberId) {
+              return {
+                ...play,
+                recent_activated_nodes: [
+                  {
+                    node_id: event.nodeId,
+                    node_name: event.name || '',
+                    activated_at: event.completedAt
+                  },
+                  ...play.recent_activated_nodes.slice(0, 2)  // 최근 3개만 유지
+                ],
+                completed_node_count: play.completed_node_count + 1
+              };
             }
-          };
-        });
+            return play;
+          })
+        );
       }
     };
 
@@ -203,11 +172,6 @@ export const MapDetailScreen = () => {
       loadMapPlayMembers();
     }
   }, [map?.is_subscribed]);
-
-  const handleStartMap = () => {
-    if (!map) return;
-    navigation.navigate("MapGraphLoading", { mapId: map.id });
-  };
 
   const handlePreviewMap = () => {
     if (!map) return;
@@ -330,35 +294,6 @@ export const MapDetailScreen = () => {
                 <Text style={styles.progressText}>
                   {map.progress.completed_node_count} / {map.progress.total_node_count} 완료
                 </Text>
-
-                {map.progress.recent_activated_nodes?.length > 0 && (
-                  <>
-                    <Text style={[styles.sectionTitle, { marginTop: 24 }]}>최근 해결한 노드</Text>
-                    <View style={styles.recentNodesList}>
-                      {map.progress.recent_activated_nodes.slice(0, 3).map((node) => (
-                        <View key={node.id} style={styles.recentNode}>
-                          <Text style={styles.recentNodeTitle} numberOfLines={1}>
-                            {node.name}
-                          </Text>
-                          <View style={styles.recentNodeInfo}>
-                            <Text style={styles.recentNodeDate}>
-                              {new Date(node.activated_at).toLocaleString('ko-KR', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true
-                              })}
-                            </Text>
-                            <Text style={styles.recentNodePlayTitle}>
-                              • {node.map_play_title}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  </>
-                )}
               </View>
             )}
 
@@ -630,34 +565,6 @@ const styles = StyleSheet.create({
     width: '90%',
     maxWidth: 400,
     backgroundColor: 'transparent',
-  },
-  recentNodesList: {
-    marginTop: 8,
-    gap: 12,
-  },
-  recentNode: {
-    padding: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-  },
-  recentNodeTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  recentNodeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  recentNodeDate: {
-    fontSize: 12,
-    color: '#666',
-  },
-  recentNodePlayTitle: {
-    fontSize: 12,
-    color: '#4CAF50',
-    fontWeight: '500',
   },
   settingsButton: {
     position: 'absolute',
