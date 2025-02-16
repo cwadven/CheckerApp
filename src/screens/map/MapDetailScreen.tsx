@@ -234,6 +234,10 @@ export const MapDetailScreen = () => {
     }
   };
 
+  const handleMorePress = (play: MapPlayMember) => {
+    navigation.navigate('PlayManage', { play });
+  };
+
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
@@ -378,6 +382,7 @@ export const MapDetailScreen = () => {
                             mapPlayMemberTitle: play.title,
                             mode: 'play'
                           })}
+                          onMorePress={() => handleMorePress(play)}
                         />
                       ))}
                     </View>

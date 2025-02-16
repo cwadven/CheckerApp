@@ -13,12 +13,13 @@ import { MapGraphLoadingScreen } from "../screens/map/MapGraphLoadingScreen";
 import { EditProfileScreen } from "../screens/profile/EditProfileScreen";
 import { MapSettingsScreen } from "../screens/map/MapSettingsScreen";
 import { useAuth } from "../contexts/AuthContext";
-import { MainTabParamList, RootStackParamList } from "../types/navigation";
 import { MyMapsScreen } from "../screens/profile/MyMapsScreen";
+import { PlayManageScreen } from "../screens/play/PlayManageScreen";
 
-const Tab = createBottomTabNavigator<MainTabParamList>();
+
+const Tab = createBottomTabNavigator();
 const AuthStack = createNativeStackNavigator();
-const MainStack = createNativeStackNavigator<RootStackParamList>();
+const MainStack = createNativeStackNavigator();
 
 const AuthNavigator = () => {
   return (
@@ -148,6 +149,13 @@ export const MainStackNavigator = () => {
           headerShown: true,
           title: "내 맵 목록",
           headerBackTitle: "뒤로",
+        }}
+      />
+      <MainStack.Screen
+        name="PlayManage"
+        component={PlayManageScreen}
+        options={{ 
+          headerShown: false 
         }}
       />
     </MainStack.Navigator>

@@ -33,6 +33,18 @@ export type RootStackParamList = {
     mapPlayMemberTitle?: string;
     mode?: 'preview' | 'play';
   };
+  PlayManage: {
+    play: MapPlayMember;
+  };
+  PlayMembers: {
+    play: MapPlayMember;
+  };
+  PlayInvites: {
+    play: MapPlayMember;
+  };
+  PlayTransferOwnership: {
+    play: MapPlayMember;
+  };
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =
