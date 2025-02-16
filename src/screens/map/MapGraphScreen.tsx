@@ -195,46 +195,46 @@ export const MapGraphScreen = ({
   };
 
   const saveViewportState = useCallback(async () => {
-    if (!mapId) return;
-    
+    if (!mapPlayMemberId) return;  // mapId 대신 mapPlayMemberId 체크
+
     const viewportState: ViewportState = {
       x: pan.x._value,
       y: pan.y._value,
       zoom: scale._value,
       lastUpdated: Date.now()
     };
-    
+
     try {
       await AsyncStorage.setItem(
-        `map_viewport_${mapId}`,
+        `viewport_state_${mapPlayMemberId}`,  // mapId 대신 mapPlayMemberId 사용
         JSON.stringify(viewportState)
       );
     } catch (error) {
       console.error('Failed to save viewport state:', error);
     }
-  }, [mapId, pan.x, pan.y, scale]);
+  }, [pan.x, pan.y, scale, mapPlayMemberId]);  // mapId 대신 mapPlayMemberId 의존성
 
   const loadViewportState = useCallback(async () => {
-    if (!mapId) return;
-    
+    if (!mapPlayMemberId) return;  // mapId 대신 mapPlayMemberId 체크
+
     try {
-      const savedState = await AsyncStorage.getItem(`map_viewport_${mapId}`);
+      const savedState = await AsyncStorage.getItem(`viewport_state_${mapPlayMemberId}`);  // mapId 대신 mapPlayMemberId 사용
       if (savedState) {
-        const viewportState = JSON.parse(savedState) as ViewportState;
+        const state = JSON.parse(savedState) as ViewportState;
         
         // 유효성 검사 추가
-        if (typeof viewportState.x === 'number' && 
-            typeof viewportState.y === 'number' && 
-            typeof viewportState.zoom === 'number') {
-          pan.x.setValue(viewportState.x);
-          pan.y.setValue(viewportState.y);
-          scale.setValue(viewportState.zoom);
+        if (typeof state.x === 'number' && 
+            typeof state.y === 'number' && 
+            typeof state.zoom === 'number') {
+          pan.x.setValue(state.x);
+          pan.y.setValue(state.y);
+          scale.setValue(state.zoom);
         }
       }
     } catch (error) {
       console.error('Failed to load viewport state:', error);
     }
-  }, [mapId, pan.x, pan.y, scale]);
+  }, [mapPlayMemberId]);  // mapId 대신 mapPlayMemberId 의존성
 
   // 컴포넌트 마운트 시 저장된 상태 로드
   useEffect(() => {
