@@ -274,6 +274,7 @@ export const AnswerSubmitModal: React.FC<AnswerSubmitModalProps> = ({
           animationType="fade" 
           transparent
           statusBarTranslucent
+          onRequestClose={onClose}
         >
           <View style={[
             StyleSheet.absoluteFill,
