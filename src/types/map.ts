@@ -24,6 +24,7 @@ export interface Map {
       map_play_title: string;
     }[];
   };
+  total_node_count: number;
 }
 
 export interface MapListResponse {
@@ -81,8 +82,14 @@ interface NodeTheme {
 export interface MapPlayMember {
   id: number;
   title: string;
-  role: 'participant' | 'admin';
+  role: 'participant' | 'owner';
   joined_at: string;
+  completed_node_count: number;
+  recent_activated_nodes: Array<{
+    node_id: number;
+    node_name: string;
+    activated_at: string;
+  }>;
 }
 
 export interface MapPlayMembersResponse {

@@ -25,6 +25,7 @@ import { AUTH_EVENTS } from "../../utils/eventEmitter";
 import { ApiError } from "../../api/client";
 import type { NodeCompletedEvent } from "../../utils/eventEmitter";
 import { CreatePlayModal } from '../../components/play/CreatePlayModal';
+import { PlayListItem } from '../../components/play/PlayListItem';
 
 type RouteProps = RootStackScreenProps<"MapDetail">;
 
@@ -367,36 +368,17 @@ export const MapDetailScreen = () => {
                   <>
                     <View style={styles.playsList}>
                       {mapPlayMembers.map((play) => (
-                        <View key={play.id} style={styles.playItem}>
-                          <View style={styles.playInfo}>
-                            <Text style={styles.playTitle}>{play.title}</Text>
-                            <Text style={styles.playDate}>
-                              {new Date(play.joined_at).toLocaleDateString('ko-KR', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                              })}부터 참여 중
-                            </Text>
-                          </View>
-                          <View style={styles.playActions}>
-                            <View style={styles.roleTag}>
-                              <Text style={styles.roleText}>
-                                {play.role === 'admin' ? '관리자' : '참여자'}
-                              </Text>
-                            </View>
-                            <Pressable 
-                              style={styles.startButton}
-                              onPress={() => navigation.navigate("MapGraphLoading", { 
-                                mapId: map.id,
-                                mapPlayMemberId: play.id,
-                                mapPlayMemberTitle: play.title,
-                                mode: 'play'
-                              })}
-                            >
-                              <Text style={styles.startButtonText}>시작</Text>
-                            </Pressable>
-                          </View>
-                        </View>
+                        <PlayListItem 
+                          key={play.id}
+                          play={play}
+                          totalNodeCount={map.total_node_count}
+                          onPress={() => navigation.navigate("MapGraphLoading", { 
+                            mapId: map.id,
+                            mapPlayMemberId: play.id,
+                            mapPlayMemberTitle: play.title,
+                            mode: 'play'
+                          })}
+                        />
                       ))}
                     </View>
                     {mapPlayMembers.length < 3 && (  // 3개 미만일 때만 버튼 표시
@@ -685,46 +667,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 12,
   },
-  playItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-  },
-  playInfo: {
-    flex: 1,
-  },
-  playTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  playDate: {
-    fontSize: 13,
-    color: '#666',
-  },
-  playActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  roleTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    marginLeft: 12,
-  },
-  roleText: {
-    fontSize: 12,
-    color: '#4CAF50',
-    fontWeight: '500',
-  },
-  playsLoader: {
-    marginTop: 20,
-  },
   emptyPlays: {
     alignItems: 'center',
     padding: 24,
@@ -749,15 +691,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  startButton: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  startButtonText: {
-    color: 'white',
-    fontSize: 13,
-    fontWeight: '600',
+  playsLoader: {
+    marginTop: 20,
   },
 });
