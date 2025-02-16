@@ -2,103 +2,99 @@ import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { MapPlayMember } from '../../types/map';
+import { formatTimeAgo } from '../../utils/date';
 
 interface PlayListItemProps {
   play: MapPlayMember;
   totalNodeCount: number;
   onPress: () => void;
+  onMorePress: () => void;
 }
-
-const formatTimeAgo = (date: string) => {
-  const now = new Date();
-  const targetDate = new Date(date);
-  const diff = now.getTime() - targetDate.getTime();
-  
-  const minutes = Math.floor(diff / (1000 * 60));
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (days > 0) return `${days}일 전`;
-  if (hours > 0) return `${hours}시간 전`;
-  if (minutes > 0) return `${minutes}분 전`;
-  return '방금 전';
-};
 
 export const PlayListItem: React.FC<PlayListItemProps> = ({ 
   play, 
   totalNodeCount = 0,
-  onPress 
+  onPress,
+  onMorePress
 }) => {
-  console.log(totalNodeCount);
   const percentage = Math.min(100, Math.round((play.completed_node_count / (totalNodeCount || 1)) * 100));
   const lastActivatedNode = play.recent_activated_nodes[0];
 
   return (
-    <Pressable 
-      style={styles.container} 
-      onPress={onPress}
-    >
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{play.title}</Text>
-          <Text style={styles.role}>
-            {play.role === 'admin' ? '관리자' : '참여자'}
-          </Text>
-        </View>
-
-        <View style={styles.progressSection}>
-          <View style={styles.progressBarContainer}>
-            <View 
-              style={[
-                styles.progressBar, 
-                { width: `${percentage}%` }
-              ]} 
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {play.completed_node_count} / {totalNodeCount} 완료
-          </Text>
-        </View>
-
-        {lastActivatedNode && (
-          <View style={styles.recentActivity}>
-            <Ionicons name="time-outline" size={16} color="#666" />
-            <Text style={styles.recentActivityText}>
-              최근 활동: {lastActivatedNode.node_name}{' '}
-              <Text style={styles.timeAgo}>
-                {formatTimeAgo(lastActivatedNode.activated_at)}
-              </Text>
-            </Text>
-          </View>
-        )}
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>{play.title}</Text>
+        <Text style={styles.role}>
+          {play.role === 'admin' ? '관리자' : '참여자'}
+        </Text>
       </View>
-      <Ionicons name="chevron-forward" size={24} color="#666" />
-    </Pressable>
+
+      <View style={styles.progressSection}>
+        <View style={styles.progressBarContainer}>
+          <View style={[styles.progressBar, { width: `${percentage}%` }]} />
+        </View>
+        <Text style={styles.progressText}>
+          {play.completed_node_count}/{totalNodeCount} 노드 완료 ({percentage}%)
+        </Text>
+      </View>
+
+      {lastActivatedNode && (
+        <Text style={styles.recentActivityText}>
+          최근 활성화: {lastActivatedNode.node_name} ({formatTimeAgo(lastActivatedNode.activated_at)})
+        </Text>
+      )}
+
+      <View style={styles.actions}>
+        <Pressable 
+          style={({ pressed }) => [
+            styles.startButton,
+            pressed && styles.startButtonPressed
+          ]}
+          onPress={onPress}
+          android_ripple={{ 
+            color: 'rgba(76, 175, 80, 0.1)',
+            borderless: false
+          }}
+        >
+          <Text style={styles.startButtonText}>시작</Text>
+        </Pressable>
+        <Pressable 
+          style={styles.moreButton}
+          onPress={onMorePress}
+          android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
+        >
+          <Ionicons name="ellipsis-horizontal" size={20} color="#666" />
+        </Pressable>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 16,
     backgroundColor: 'white',
     borderRadius: 12,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
-  content: {
-    flex: 1,
-    gap: 8,
+  pressed: {
+    opacity: 0.7,
+    backgroundColor: '#f9f9f9',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 12,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+    flex: 1,
+    marginRight: 8,
   },
   role: {
     fontSize: 12,
@@ -109,13 +105,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   progressSection: {
-    gap: 4,
+    marginBottom: 8,
   },
   progressBarContainer: {
     height: 4,
     backgroundColor: '#E8F5E9',
     borderRadius: 2,
     overflow: 'hidden',
+    marginBottom: 4,
   },
   progressBar: {
     height: '100%',
@@ -126,17 +123,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
   },
-  recentActivity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
   recentActivityText: {
     fontSize: 12,
     color: '#666',
-    flex: 1,
   },
-  timeAgo: {
-    color: '#999',
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  startButton: {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  startButtonPressed: {
+    backgroundColor: '#f0f9f0',
+  },
+  startButtonText: {
+    color: '#4CAF50',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  moreButton: {
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
   },
 }); 

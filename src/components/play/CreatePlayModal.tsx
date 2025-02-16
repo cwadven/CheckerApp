@@ -16,12 +16,12 @@ interface CreatePlayModalProps {
   isLoading: boolean;
 }
 
-export const CreatePlayModal = ({
+export const CreatePlayModal: React.FC<CreatePlayModalProps> = ({
   visible,
   onClose,
   onSubmit,
   isLoading,
-}: CreatePlayModalProps) => {
+}) => {
   const [title, setTitle] = useState('');
   const [error, setError] = useState('');
 
@@ -50,6 +50,7 @@ export const CreatePlayModal = ({
       transparent
       animationType="fade"
       statusBarTranslucent
+      onRequestClose={onClose}
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
