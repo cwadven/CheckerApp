@@ -82,7 +82,7 @@ interface NodeTheme {
 export interface MapPlayMember {
   id: number;
   title: string;
-  role: 'participant' | 'owner';
+  role: 'participant' | 'admin';
   joined_at: string;
   completed_node_count: number;
   recent_activated_nodes: Array<{

@@ -42,7 +42,7 @@ export const PlayListItem: React.FC<PlayListItemProps> = ({
         <View style={styles.header}>
           <Text style={styles.title}>{play.title}</Text>
           <Text style={styles.role}>
-            {play.role === 'owner' ? '관리자' : '참여자'}
+            {play.role === 'admin' ? '관리자' : '참여자'}
           </Text>
         </View>
 
