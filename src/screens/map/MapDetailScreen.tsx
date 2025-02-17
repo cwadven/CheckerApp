@@ -173,6 +173,14 @@ export const MapDetailScreen = () => {
     }
   }, [map?.is_subscribed]);
 
+  useEffect(() => {
+    if (route.params?.shouldRemovePlay) {
+      setMapPlayMembers(prev => 
+        prev.filter(play => play.id !== route.params?.removedPlayId)
+      );
+    }
+  }, [route.params?.shouldRemovePlay]);
+
   const handlePreviewMap = () => {
     if (!map) return;
     navigation.navigate("MapGraphLoading", { mapId: map.id });
@@ -199,7 +207,12 @@ export const MapDetailScreen = () => {
   };
 
   const handleMorePress = (play: MapPlayMember) => {
-    navigation.navigate('PlayManage', { play });
+    navigation.navigate('PlayManage', { 
+      play: {
+        ...play,
+        map_id: mapId
+      }
+    });
   };
 
   if (isLoading) {

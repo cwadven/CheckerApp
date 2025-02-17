@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ViewStyle,
+  Pressable,
 } from 'react-native';
 
 interface AlertModalProps {
@@ -21,6 +22,7 @@ interface AlertModalProps {
     titleColor?: string;
     icon?: string;
   };
+  confirmButtonColor?: string;
 }
 
 export const AlertModal: React.FC<AlertModalProps> = ({
@@ -33,6 +35,7 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   cancelText = '취소',
   showCancel = false,
   style,
+  confirmButtonColor,
 }) => {
   return (
     <View style={styles.container}>
@@ -57,12 +60,18 @@ export const AlertModal: React.FC<AlertModalProps> = ({
               </Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity
-            style={[styles.button, styles.confirmButton]}
+          <Pressable
+            style={[
+              styles.button, 
+              styles.confirmButton,
+              confirmButtonColor && { backgroundColor: confirmButtonColor }
+            ]}
             onPress={onConfirm}
           >
-            <Text style={styles.buttonText}>{confirmText}</Text>
-          </TouchableOpacity>
+            <Text style={styles.buttonText}>
+              {confirmText}
+            </Text>
+          </Pressable>
         </View>
       </View>
     </View>
