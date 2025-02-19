@@ -153,13 +153,25 @@ export class ApiClient {
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         try {
+          // 1. 리프레시 토큰으로 갱신 시도
           if (!this.refreshPromise) {
-            this.refreshPromise = this.refreshToken();
+            this.refreshPromise = this.refreshToken().catch(async (refreshError) => {
+              // 2. 리프레시 토큰 갱신 실패시 게스트 토큰 획득 시도
+              const guestTokenInfo = await this.getOrSetAccessToken();
+              if (!guestTokenInfo) {
+                throw new ApiError(401, '인증에 실패했습니다.');
+              }
+              return {
+                access_token: guestTokenInfo.access_token,
+                refresh_token: guestTokenInfo.refresh_token
+              };
+            });
           }
+          
           await this.refreshPromise;
           this.refreshPromise = null;
           
-          // 토큰 갱신 후 원래 요청 재시도
+          // 3. 토큰 갱신 후 원래 요청 재시도
           const retryResponse = await this.fetchWithAuth(method, endpoint, options);
           const retryData = await retryResponse.json();
           
@@ -173,8 +185,9 @@ export class ApiClient {
             message: retryData.message,
             errors: retryData.errors
           };
-        } catch (refreshError) {
-          eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, '로그인 해주세요.');
+        } catch (finalError) {
+          // 모든 인증 시도 실패
+          eventEmitter.emit(AUTH_EVENTS.REQUIRE_LOGIN, '로그인이 필요합니다.');
           throw new ApiError(401, '로그인이 필요합니다.');
         }
       }
