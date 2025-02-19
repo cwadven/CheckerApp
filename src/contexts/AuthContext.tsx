@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import type { RootStackParamList } from '../types/navigation';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 interface User {
   id: number;
@@ -17,6 +19,7 @@ interface AuthContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   redirectToLogin: (message: string) => void;
+  updateUser: (userData: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -26,17 +29,19 @@ interface LoginResponse {
   refresh_token: string;
 }
 
+type NavigationType = NativeStackNavigationProp<RootStackParamList>;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationType>();
 
   const login = async (tokens: LoginResponse) => {
     try {
       await AsyncStorage.setItem('access_token', tokens.access_token);
       await AsyncStorage.setItem('refresh_token', tokens.refresh_token);
       await AsyncStorage.setItem('is_member', 'true');
-      setUser({});
+      setUser(null);
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Failed to save tokens:', error);
@@ -62,9 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     navigation.reset({
       index: 0,
       routes: [{ 
-        name: 'Auth',
+        name: 'Auth' as const,
         params: { 
-          screen: 'LoginScreen',
+          screen: 'LoginScreen' as const,
           params: { message } 
         }
       }],

@@ -15,6 +15,7 @@ import { DevelopingModal } from "../../components/modals/DevelopingModal";
 import { apiClient } from "../../api/client";
 import { profileService } from "../../api/services/profileService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { User } from '../../types/user';  // User 타입 import
 
 export const LoginScreen = ({
   navigation,
@@ -59,37 +60,34 @@ export const LoginScreen = ({
       setIsLoading(true);
       setError(null);
       
-      // 1. 로그인 API 호출
       const response = await apiClient.login({
         username: email,
         password: password,
       });
 
-      // 2. 토큰 저장
       await login({ 
         access_token: response.access_token, 
         refresh_token: response.refresh_token 
       });
 
-      // 3. 프로필 정보 가져오기
       const profileResponse = await profileService.getProfile();
-      const userData = {
+      const userData: User = {  // User 타입에 맞게 수정
         id: profileResponse.data.id,
+        email: profileResponse.data.email,
         nickname: profileResponse.data.nickname,
-        profile_image: profileResponse.data.profile_image
+        profile_image: profileResponse.data.profile_image,
+        subscribed_map_count: profileResponse.data.subscribed_map_count
       };
       
-      // 4. 유저 정보 저장
       setUser(userData);
 
-      // 5. Profile 화면으로 이동
       navigation.reset({
         index: 0,
         routes: [
           {
-            name: "Main",
+            name: 'Main' as const,  // 타입 assertion 추가
             params: {
-              screen: "Profile"
+              screen: 'Profile'
             }
           }
         ]

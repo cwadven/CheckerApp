@@ -25,9 +25,15 @@
         "backgroundColor": "#000000"
       },
       "package": "com.qosmo.qosmoclient",
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true,
       "permissions": [
         "android.permission.DETECT_SCREEN_CAPTURE",
-        "android.permission.INTERNET"
+        "android.permission.INTERNET",
+        "android.permission.NOTIFICATIONS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
@@ -36,6 +42,21 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#ffffff",
+          "androidMode": "default",
+          "androidCollapsedTitle": "Updates from Qosmo",
+          "androidChannelId": "default",
+          "androidBadgeIconType": "notification",
+          "fcmAndroidServiceFile": "./google-services.json",
+          "fcmSenderId": "886043266115"
+        }
+      ]
+    ]
   }
 }

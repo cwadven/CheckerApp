@@ -47,6 +47,35 @@ buildTypes {
     }
 }
 
+## 프로젝트 설정 앱푸시 (android/app/build.gradle, android/build.gradle)
+
+[ goole-services.json 파일 생성 ]
+Firebase Console 에서 프로젝트 생성 후 설정 후 다운로드
+
+[ android/build.gradle ]
+
+- com.google.gms:google-services:4.3.15 설정
+
+buildscript {
+    ext {
+        ...
+    }
+    repositories {
+        ...
+    }
+    dependencies {
+        ...
+        classpath('com.google.gms:google-services:4.3.15')
+    }
+}
+
+[ android/app/build.gradle ]
+
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+apply plugin: 'com.google.gms.google-services'
+
 ## sdk 관리 (android/local.properties)
 
 ## This file must *NOT* be checked into Version Control Systems,
