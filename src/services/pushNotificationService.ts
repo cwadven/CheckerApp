@@ -21,6 +21,34 @@ class PushNotificationService {
       return;
     }
 
+    // 알림 핸들러를 먼저 설정
+    Notifications.setNotificationHandler({
+      handleNotification: async () => {
+        return {
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH
+        };
+      }
+    });
+
+    // 알림 수신 리스너 추가
+    Notifications.addNotificationReceivedListener((notification) => {
+      this.showDebugAlert(
+        'Notification Received',
+        JSON.stringify(notification, null, 2)
+      );
+    });
+
+    // 알림 응답 리스너 추가
+    Notifications.addNotificationResponseReceivedListener((response) => {
+      this.showDebugAlert(
+        'Notification Response',
+        JSON.stringify(response, null, 2)
+      );
+    });
+
     try {
       const token = await this.getDeviceToken();
       this.showDebugAlert('FCM Token', token || 'No token received');
@@ -32,24 +60,18 @@ class PushNotificationService {
       this.showDebugAlert('Push Error', error instanceof Error ? error.message : 'Unknown error');
     }
 
-    // FCM 채널 설정 (Android)
+    // Android 채널 설정
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('default', {
         name: 'Default',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#FF231F7C',
+        enableVibrate: true,
+        enableLights: true,
+        showBadge: true
       });
     }
-
-    // 알림 핸들러
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-      }),
-    });
 
     this.isInitialized = true;
   }
