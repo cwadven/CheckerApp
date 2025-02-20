@@ -2,32 +2,47 @@ import { Platform, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { apiClient } from '../api/client';
 import Constants from 'expo-constants';
+import * as Device from 'expo-device';
 
 class PushNotificationService {
   private isInitialized = false;
 
   private showDebugAlert(title: string, message: string) {
     setTimeout(() => {
-      Alert.alert(
-        title,
-        message,
-        [{ text: 'OK' }],
-        { cancelable: true }
-      );
-    }, 100);  // 약간의 지연을 주어 Alert가 겹치지 않도록 함
+      Alert.alert(title, message, [{ text: 'OK' }], { cancelable: true });
+    }, 100);
   }
 
   async initialize() {
     if (this.isInitialized) return;
 
-    this.showDebugAlert('Push Init', `Platform: ${Platform.OS}`);
-
-    if (Platform.OS === 'web') {
+    if (Platform.OS === 'web' || !Device.isDevice) {
       this.isInitialized = true;
       return;
     }
 
-    // 알림 핸들러 설정
+    try {
+      const token = await this.getDeviceToken();
+      this.showDebugAlert('FCM Token', token || 'No token received');
+      
+      if (token) {
+        await this.registerDeviceToken(token);
+      }
+    } catch (error) {
+      this.showDebugAlert('Push Error', error instanceof Error ? error.message : 'Unknown error');
+    }
+
+    // FCM 채널 설정 (Android)
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'Default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    // 알림 핸들러
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -36,85 +51,62 @@ class PushNotificationService {
       }),
     });
 
-    try {
-      const token = await this.getDeviceToken();
-      this.showDebugAlert('FCM Token', token || 'No token received');
-      
-      if (token) {
-        await this.registerDeviceToken(token);
-        this.showDebugAlert('Token Registration', 'Success');
-      }
-    } catch (error) {
-      this.showDebugAlert('Push Error', error instanceof Error ? error.message : 'Unknown error');
-    }
-
-    // 토큰 갱신 리스너 설정
-    Notifications.addPushTokenListener(async (token) => {
-      console.log('Token refreshed:', token);
-      if (token.data) {
-        await this.registerDeviceToken(token.data);
-      }
-    });
-
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'General Notifications',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#FF231F7C',
-      });
-    }
-
     this.isInitialized = true;
-    console.log('PushNotificationService: Initialization completed');
   }
 
   private async getDeviceToken() {
-    if (Platform.OS === 'web') return null;
-
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      this.showDebugAlert('Permission Status', existingStatus);
-      
       let finalStatus = existingStatus;
       
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
-        this.showDebugAlert('New Permission Status', status);
       }
       
       if (finalStatus !== 'granted') {
-        this.showDebugAlert('Permission Denied', 'Notification permission not granted');
+        this.showDebugAlert('Permission Error', 'Failed to get push token permissions');
         return null;
       }
 
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-      if (!projectId) {
-        throw new Error('Project ID not configured');
-      }
+      // FCM 토큰 가져오기
+      const token = await Notifications.getDevicePushTokenAsync();
+      this.showDebugAlert('Token Details', JSON.stringify({
+        token: token.data,
+        type: token.type,
+        platform: Platform.OS
+      }, null, 2));
 
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId
-      });
-      this.showDebugAlert('Token Received', token.data);
       return token.data;
     } catch (error) {
-      this.showDebugAlert('Token Error', error instanceof Error ? error.message : 'Unknown error');
+      this.showDebugAlert('Token Error', `Error: ${error instanceof Error ? error.message : 'Unknown'}`);
       return null;
     }
   }
 
   private async registerDeviceToken(token: string) {
     try {
-      this.showDebugAlert('Registration Start', `Token: ${token}`);
       await apiClient.post('/v1/push/device-token', {
         token,
-        device_type: Platform.OS === 'ios' ? 'ios' : 'android'
+        device_type: Platform.OS
       });
-      this.showDebugAlert('Registration Success', 'Token registered with server');
     } catch (error) {
       this.showDebugAlert('Registration Error', error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+
+  async testPushNotification() {
+    try {
+      const token = await this.getDeviceToken();
+      if (!token) {
+        this.showDebugAlert('Test Failed', 'No token available');
+        return;
+      }
+
+      const response = await apiClient.post('/v1/push/test', { token });
+      this.showDebugAlert('Test Result', JSON.stringify(response.data, null, 2));
+    } catch (error) {
+      this.showDebugAlert('Test Error', error instanceof Error ? error.message : 'Unknown error');
     }
   }
 }
