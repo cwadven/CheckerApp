@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import type { RootStackParamList } from '../types/navigation';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { pushNotificationService } from '../services/pushNotificationService';
 
 interface User {
   id: number;
@@ -43,8 +44,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await AsyncStorage.setItem('is_member', 'true');
       setUser(null);
       setIsAuthenticated(true);
+
+      // 로그인 성공 후 푸시 토큰 재등록
+      await pushNotificationService.registerDeviceTokenAfterLogin();
+
     } catch (error) {
-      console.error('Failed to save tokens:', error);
+      console.error('Login error:', error);
       throw error;
     }
   };
