@@ -1,8 +1,27 @@
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { apiClient } from '../api/client';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
+import { navigationRef } from '../navigation/RootNavigation';
+
+// 알림 타입 정의
+type NotificationType = 'question_feedback';
+
+interface PushData {
+  type: NotificationType;
+  id?: string;
+  screen?: string;
+  params?: Record<string, any>;
+}
+
+interface QuestionFeedbackData {
+  type: 'question_feedback';
+  question_id: string;
+  map_id: string;
+  map_play_member_id: string;
+  is_correct: string;
+}
 
 class PushNotificationService {
   private isInitialized = false;
@@ -10,14 +29,18 @@ class PushNotificationService {
   async initialize() {
     if (this.isInitialized) return;
 
+    Alert.alert('Push Init', 'Initializing push notifications...');
+
     if (Platform.OS === 'web' || !Device.isDevice) {
       this.isInitialized = true;
       return;
     }
 
-    // 알림 핸들러를 먼저 설정
+    // 알림 핸들러 설정
     Notifications.setNotificationHandler({
-      handleNotification: async () => {
+      handleNotification: async (notification) => {
+        // 알림 데이터 로깅
+        console.log('Handling notification:', notification);
         return {
           shouldShowAlert: true,
           shouldPlaySound: true,
@@ -27,23 +50,46 @@ class PushNotificationService {
       }
     });
 
-    // 알림 수신 리스너 추가
+    // 알림 수신 리스너
     Notifications.addNotificationReceivedListener((notification) => {
-      console.log('Notification received:', notification);
+      console.log('Received notification:', notification);
+      Alert.alert('Notification Data (Received)', 
+        JSON.stringify({
+          data: notification.request.content.data,
+          remote: notification.request.trigger.remote,
+          payload: (notification.request.trigger as any)?.payload
+        }, null, 2)
+      );
     });
 
-    // 알림 응답 리스너 추가
+    // 알림 응답 리스너 (알림 클릭 시)
     Notifications.addNotificationResponseReceivedListener((response) => {
-      console.log('Notification response:', response);
+      // 전체 response 구조 보기
+      Alert.alert(
+        'Full Response Structure',
+        JSON.stringify(response, null, 2)
+      );
+
+      // FCM 데이터 접근
+      const data = response.notification.request.content.data;
+      
+      if (data?.type === 'question_feedback') {
+        navigationRef.navigate('MapGraphLoading', { 
+          mapId: parseInt(data.map_id),
+          mapPlayMemberId: parseInt(data.map_play_member_id),
+          mode: 'play'
+        });
+      }
     });
 
     try {
       const token = await this.getDeviceToken();
       if (token) {
         await this.registerDeviceToken(token);
+        Alert.alert('Token', `Device token: ${token}`);
       }
     } catch (error) {
-      console.error('Push Error:', error);
+      console.error('Push setup error:', error);
     }
 
     // Android 채널 설정
@@ -60,6 +106,7 @@ class PushNotificationService {
     }
 
     this.isInitialized = true;
+    Alert.alert('Init Complete', 'Push notification setup completed');
   }
 
   private async getDeviceToken() {

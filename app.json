@@ -50,10 +50,14 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#ffffff",
+          "sounds": ["./assets/notification-sound.wav"],
+          "mode": "production",
           "androidMode": "default",
           "androidCollapsedTitle": "Updates from Qosmo",
           "androidChannelId": "default",
-          "androidBadgeIconType": "notification",
+          "androidImportance": "max",
+          "androidShowBadge": true,
+          "androidBadgeIconType": "large",
           "fcmAndroidServiceFile": "./google-services.json",
           "fcmSenderId": "886043266115"
         }
