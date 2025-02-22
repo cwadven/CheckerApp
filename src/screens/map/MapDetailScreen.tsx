@@ -22,7 +22,7 @@ import type { Map, MapPlayMember, MapPlayMembersResponse } from "../../types/map
 import { apiClient } from "../../api/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AlertModal } from "../../components/common/AlertModal";
-import { eventEmitter, MAP_EVENTS } from "../../utils/eventEmitter";
+import { eventEmitter, MAP_EVENTS, PLAY_EVENTS } from "../../utils/eventEmitter";
 import { AUTH_EVENTS } from "../../utils/eventEmitter";
 import { ApiError } from "../../api/client";
 import type { NodeCompletedEvent } from "../../utils/eventEmitter";
@@ -182,6 +182,20 @@ export const MapDetailScreen = () => {
       );
     }
   }, [route.params?.shouldRemovePlay]);
+
+  useEffect(() => {
+    const handlePlayDeactivated = (deactivatedPlayId: number) => {
+      setMapPlayMembers(prev => 
+        prev.filter(play => play.id !== deactivatedPlayId)
+      );
+    };
+
+    eventEmitter.on(PLAY_EVENTS.PLAY_DEACTIVATED, handlePlayDeactivated);
+
+    return () => {
+      eventEmitter.off(PLAY_EVENTS.PLAY_DEACTIVATED, handlePlayDeactivated);
+    };
+  }, []);
 
   const handlePreviewMap = () => {
     if (!map) return;

@@ -8,12 +8,14 @@ import {
   ScrollView,
   Modal,
   BackHandler,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { RootStackScreenProps } from '../../types/navigation';
 import { AlertModal } from "../../components/common/AlertModal";
 import { apiClient } from '../../api/client';
 import { ApiError } from '../../api/client';
+import { eventEmitter, PLAY_EVENTS } from '../../utils/eventEmitter';
 
 const MenuItem = ({ 
   icon, 
@@ -70,6 +72,7 @@ export const PlayManageScreen = ({
       );
 
       if (response.status_code === 'success') {
+        eventEmitter.emit(PLAY_EVENTS.PLAY_DEACTIVATED, play.id);
         navigation.navigate('MapDetail', {
           mapId: play.map_id,
           shouldRemovePlay: true,
@@ -84,6 +87,16 @@ export const PlayManageScreen = ({
     } finally {
       setIsLeaving(false);
       setLeaveModalVisible(false);
+    }
+  };
+
+  const handleDeactivate = async () => {
+    try {
+      await apiClient.post(`/v1/play/${play.id}/deactivate`);
+      eventEmitter.emit(PLAY_EVENTS.PLAY_DEACTIVATED, play.id);
+      navigation.navigate('MapDetail', { mapId: play.map_id });
+    } catch (error) {
+      Alert.alert('오류', '플레이 탈퇴에 실패했습니다.');
     }
   };
 

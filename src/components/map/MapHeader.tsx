@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { MapGraphMeta } from "../../types/map";
+import { eventEmitter, MAP_EVENTS } from '../../utils/eventEmitter';
 
 interface MapHeaderProps {
   mapMeta: MapGraphMeta;
@@ -11,6 +12,20 @@ interface MapHeaderProps {
 }
 
 export const MapHeader = ({ mapMeta, title, subtitle, onBack }: MapHeaderProps) => {
+  const [completedNodes, setCompletedNodes] = useState(mapMeta.stats.completed_nodes);
+
+  useEffect(() => {
+    const handleNodeCompleted = () => {
+      setCompletedNodes(prev => prev + 1);
+    };
+
+    eventEmitter.on(MAP_EVENTS.NODE_COMPLETED, handleNodeCompleted);
+
+    return () => {
+      eventEmitter.off(MAP_EVENTS.NODE_COMPLETED, handleNodeCompleted);
+    };
+  }, []);
+
   return (
     <View style={styles.header}>
       <View style={styles.titleRow}>
@@ -30,7 +45,7 @@ export const MapHeader = ({ mapMeta, title, subtitle, onBack }: MapHeaderProps) 
             color={mapMeta.theme.node.completed.text}
           />
           <Text style={styles.statText}>
-            {mapMeta.stats.completed_nodes}/{mapMeta.stats.total_nodes} 완료
+            진행도: {completedNodes}/{mapMeta.stats.total_nodes}
           </Text>
         </View>
         <View style={styles.statItem}>

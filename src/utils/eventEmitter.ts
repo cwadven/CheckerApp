@@ -32,6 +32,10 @@ export const MAP_EVENTS = {
   NODE_COMPLETED: 'map:node-completed'
 } as const;
 
+export const PLAY_EVENTS = {
+  PLAY_DEACTIVATED: 'play-deactivated'
+} as const;
+
 export interface SubscriptionUpdatedEvent {
   mapId: number;
   isSubscribed: boolean;
