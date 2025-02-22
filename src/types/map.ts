@@ -98,3 +98,17 @@ export interface MapPlayMembersResponse {
     plays: MapPlayMember[];
   };
 }
+
+interface JoinPlayResponse {
+  status_code: string;
+  data: {
+    id: number;
+    map_play_id: number;
+    member_id: number;
+    role: string;
+    deactivated: boolean;
+    deactivated_reason: string;
+    created_at: string;
+    updated_at: string;
+  };
+}

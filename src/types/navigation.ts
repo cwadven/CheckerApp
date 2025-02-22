@@ -45,6 +45,9 @@ export type RootStackParamList = {
   PlayTransferOwnership: {
     play: MapPlayMember;
   };
+  MapDetail: {
+    mapId: number;
+  };
 };
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =

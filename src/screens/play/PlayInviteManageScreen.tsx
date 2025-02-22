@@ -11,7 +11,6 @@ import {
   Alert,
   Clipboard,
   TouchableOpacity,
-  ToastAndroid
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -40,6 +39,14 @@ interface InviteCodesResponse {
   status_code: string;
   invite_codes: InviteCode[];  // data 없이 바로 invite_codes
 }
+
+const showNotification = Platform.select({
+  android: (message: string) => {
+    // const { ToastAndroid } = require('react-native');
+    // ToastAndroid.show(message, ToastAndroid.SHORT);
+  },
+  default: (message: string) => Alert.alert('알림', message),
+});
 
 export const PlayInviteManageScreen = ({ 
   route, 
@@ -119,11 +126,7 @@ export const PlayInviteManageScreen = ({
 
   const handleCopyCode = (code: string) => {
     Clipboard.setString(code);
-    if (Platform.OS === 'android') {
-      ToastAndroid.show('초대 코드가 복사되었습니다', ToastAndroid.SHORT);
-    } else {
-      Alert.alert('복사 완료', '초대 코드가 클립보드에 복사되었습니다.');
-    }
+    showNotification('초대 코드가 클립보드에 복사되었습니다');
   };
 
   return (

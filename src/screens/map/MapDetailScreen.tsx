@@ -9,9 +9,11 @@ import {
   Pressable,
   SafeAreaView,
   Modal,
+  TextInput,
+  Alert,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
 import type { RootStackScreenProps } from "../../types/navigation";
@@ -27,11 +29,11 @@ import type { NodeCompletedEvent } from "../../utils/eventEmitter";
 import { CreatePlayModal } from '../../components/play/CreatePlayModal';
 import { PlayListItem } from '../../components/play/PlayListItem';
 
-type RouteProps = RootStackScreenProps<"MapDetail">;
+type NavigationProp = NativeStackScreenProps<RootStackParamList, 'MapDetail'>;
 
 export const MapDetailScreen = () => {
-  const route = useRoute<RouteProps["route"]>();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<NavigationProp["route"]>();
+  const navigation = useNavigation<NavigationProp["navigation"]>();
   const { mapId } = route.params;
 
   const [map, setMap] = useState<Map | null>(null);
@@ -415,8 +417,11 @@ export const MapDetailScreen = () => {
       <CreatePlayModal
         visible={isCreatePlayModalVisible}
         onClose={() => setCreatePlayModalVisible(false)}
-        onSubmit={handleCreatePlay}
-        isLoading={isCreatingPlay}
+        onSuccess={() => {
+          loadMapPlayMembers();
+          setCreatePlayModalVisible(false);
+        }}
+        mapId={mapId}
       />
     </SafeAreaView>
   );
@@ -618,5 +623,84 @@ const styles = StyleSheet.create({
   },
   playsLoader: {
     marginTop: 20,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  tab: {
+    flex: 1,
+    padding: 8,
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: '#007AFF',
+  },
+  tabText: {
+    color: '#666',
+  },
+  activeTabText: {
+    color: 'white',
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  input: {
+    height: 40,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    marginBottom: 16,
+    padding: 8,
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#ddd',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  createButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+  },
+  createButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });
