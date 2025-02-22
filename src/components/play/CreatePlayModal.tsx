@@ -93,7 +93,10 @@ export const CreatePlayModal = ({ visible, onClose, onSuccess, mapId }: CreatePl
 
           {mode === 'create' ? (
             <TextInput
-              style={[styles.input, errorMessage && styles.inputError]}
+              style={[
+                styles.input,
+                errorMessage ? styles.inputError : null
+              ]}
               placeholder="플레이 이름"
               value={playName}
               onChangeText={(text) => {
@@ -103,7 +106,10 @@ export const CreatePlayModal = ({ visible, onClose, onSuccess, mapId }: CreatePl
             />
           ) : (
             <TextInput
-              style={[styles.input, errorMessage && styles.inputError]}
+              style={[
+                styles.input,
+                errorMessage ? styles.inputError : null
+              ]}
               placeholder="초대 코드 입력"
               value={inviteCode}
               onChangeText={(text) => {
