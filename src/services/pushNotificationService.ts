@@ -53,10 +53,11 @@ class PushNotificationService {
     // 알림 수신 리스너
     Notifications.addNotificationReceivedListener((notification) => {
       console.log('Received notification:', notification);
-      Alert.alert('Notification Data (Received)', 
+      Alert.alert(
+        'Notification Debug',
         JSON.stringify({
           data: notification.request.content.data,
-          remote: notification.request.trigger.remote,
+          trigger: notification.request.trigger,
           payload: (notification.request.trigger as any)?.payload
         }, null, 2)
       );

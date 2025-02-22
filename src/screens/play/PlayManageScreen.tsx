@@ -115,7 +115,7 @@ export const PlayManageScreen = ({
               <MenuItem 
                 icon="mail-outline" 
                 text="초대 관리" 
-                onPress={() => handleMenuPress('초대 관리')}
+                onPress={() => navigation.navigate('PlayInvites', { play })}
               />
               <MenuItem 
                 icon="swap-horizontal-outline" 

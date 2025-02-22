@@ -15,6 +15,7 @@ import { MapSettingsScreen } from "../screens/map/MapSettingsScreen";
 import { useAuth } from "../contexts/AuthContext";
 import { MyMapsScreen } from "../screens/profile/MyMapsScreen";
 import { PlayManageScreen } from "../screens/play/PlayManageScreen";
+import { PlayInviteManageScreen } from "../screens/play/PlayInviteManageScreen";
 
 
 const Tab = createBottomTabNavigator();
@@ -156,6 +157,13 @@ export const MainStackNavigator = () => {
         component={PlayManageScreen}
         options={{ 
           headerShown: false 
+        }}
+      />
+      <MainStack.Screen
+        name="PlayInvites"
+        component={PlayInviteManageScreen}
+        options={{ 
+          headerShown: false
         }}
       />
     </MainStack.Navigator>
